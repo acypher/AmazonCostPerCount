@@ -1,0 +1,26 @@
+.cpc-badge {
+  display: inline-block;
+  margin: 4px 0 2px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  color: #0f5132;
+  background: #d1f0e0;
+  border: 1px solid #9fd8bb;
+  cursor: help;
+}
+.cpc-badge--corrected { color: #6b4200; background: #ffe8b3; border-color: #f0c35a; }
+.cpc-badge--none { color: #555; background: #eee; border-color: #ccc; font-weight: 400; }
+.cpc-banner {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #0f1111;
+  background: #f0f8ff;
+  border: 1px solid #b6d4ef;
+  border-radius: 6px;
+}
