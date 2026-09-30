@@ -100,7 +100,13 @@
   }, true);
 
   // ---------------- reading a result card ----------------
-  function cardInfo(card) {
+  // Amazon lazily renders the lower ("More results") cards: until a card scrolls near the
+  // viewport it is an empty shell with only data-asin, and it can be emptied again later.
+  // Remember what each product looked like once seen, so an empty shell keeps its place
+  // instead of dropping to the bottom (which caused an endless re-sort loop).
+  const infoCache = new Map(); // asin -> info
+
+  function readCard(card) {
     const titleEl = card.querySelector('[data-cy="title-recipe"]') || card.querySelector('h2');
     const h2 = card.querySelector('h2');
     let title = (titleEl?.textContent || '').replace(/\s+/g, ' ').trim();
@@ -116,6 +122,17 @@
     if (!amazonUnit && priceScope !== card) amazonUnit = CPC.parseAmazonUnit(card.textContent);
 
     return { title, price, amazonUnit, unit: CPC.computeUnitPrice({ title, price, amazonUnit }) };
+  }
+
+  function cardInfo(card) {
+    const asin = card.dataset.asin || '';
+    const cached = asin ? infoCache.get(asin) : null;
+    const rendered = !!(card.querySelector('[data-cy="title-recipe"]') || card.querySelector('h2'));
+    if (!rendered) return cached || { title: '', price: NaN, amazonUnit: null, unit: null, pending: true };
+    const info = readCard(card);
+    if (!info.unit && cached && cached.unit) return cached; // partially rendered; keep what we knew
+    if (asin) infoCache.set(asin, info);
+    return info;
   }
 
   function badge(card, info) {
@@ -139,13 +156,26 @@
   // ---------------- sorting ----------------
   let applying = false;
 
+  // Safety brake: if something keeps undoing our order, stop fighting instead of flickering.
+  const reorderTimes = [];
+  let gaveUp = false;
+
   function sortSlot(slot) {
     const cards = [...slot.children].filter((el) => el.matches(CARD_SEL));
     if (cards.length < 2) return;
     const items = cards.map((el) => ({ el, ...cardInfo(el) }));
-    for (const it of items) badge(it.el, it);
+    for (const it of items) if (!it.pending) badge(it.el, it);
     const sorted = CPC.sortKeyed(items);
     if (sorted.every((it, i) => it.el === cards[i])) return; // already in order
+    if (gaveUp) return;
+    const now = Date.now();
+    reorderTimes.push(now);
+    while (reorderTimes.length && now - reorderTimes[0] > 10000) reorderTimes.shift();
+    if (reorderTimes.length > 6) {
+      gaveUp = true;
+      console.warn('[cost-per-count] The page keeps changing the result order; pausing re-sorting until the next page load.');
+      return;
+    }
     // Swap cards into the slots the cards occupied, leaving Amazon's widgets where they were.
     const holders = cards.map((el) => { const c = document.createComment('cpc'); el.before(c); return c; });
     sorted.forEach((it, i) => holders[i].replaceWith(it.el));
@@ -196,7 +226,7 @@
   // Keep the state right when Amazon swaps the URL without a full reload.
   let lastHref = location.href;
   setInterval(() => {
-    if (location.href !== lastHref) { lastHref = location.href; active = computeActive(); apply(); }
+    if (location.href !== lastHref) { lastHref = location.href; active = computeActive(); gaveUp = false; reorderTimes.length = 0; apply(); }
   }, 500);
 
   apply();
