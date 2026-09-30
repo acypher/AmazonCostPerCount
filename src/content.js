@@ -1,6 +1,6 @@
 /*
  * Content script for amazon.com search results (/s?k=...).
- * Adds "Price per oz/count: Low to High" to the "Sort by:" pulldown and, when chosen,
+ * Adds "Price per oz/count" to the "Sort by:" pulldown and, when chosen,
  * reorders the result cards on the current page and badges each with its unit price.
  */
 (() => {
@@ -9,7 +9,7 @@
 
   const CPC = globalThis.CPC;
   const OPTION_VALUE = 'cpc-unit-price-asc';
-  const OPTION_LABEL = 'Price per oz/count: Low to High';
+  const OPTION_LABEL = 'Price per oz/count';
   const STATE_KEY = 'cpcSortState';
   const CARD_SEL = '[data-component-type="s-search-result"]';
 

@@ -1,13 +1,13 @@
 # Amazon Sort by Price per Count / Ounce
 
-A Chrome extension (Manifest V3) that adds **"Price per oz/count: Low to High"** to the
+A Chrome extension (Manifest V3) that adds **"Price per oz/count"** to the
 **Sort by:** pulldown on Amazon search-result pages (`https://www.amazon.com/s?k=...`).
 
 ## Install
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and choose this folder (the one containing `manifest.json`).
-3. Search Amazon, open **Sort by:**, and pick **Price per oz/count: Low to High**.
+3. Search Amazon, open **Sort by:**, and pick **Price per oz/count**.
 
 After code changes, click the extension's reload icon in `chrome://extensions` and refresh the Amazon tab.
 

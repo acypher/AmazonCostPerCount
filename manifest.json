@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Amazon Sort by Price per Count / Ounce",
   "short_name": "Cost per Count",
-  "version": "1.0.0",
-  "description": "Adds \"Price per oz/count: Low to High\" to the Sort by pulldown on Amazon search results, correcting Amazon's misleading unit prices.",
+  "version": "1.0.1",
+  "description": "Adds \"Price per oz/count\" to the Sort by pulldown on Amazon search results, correcting Amazon's misleading unit prices.",
   "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
   "content_scripts": [
     {
