@@ -1,0 +1,605 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9B36DB08307096DD00B21FE1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B36DB07307096DD00B21FE1 /* AppDelegate.swift */; };
+		9B36DB0C307096DD00B21FE1 /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB0A307096DD00B21FE1 /* Main.html */; };
+		9B36DB0E307096DD00B21FE1 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB0D307096DD00B21FE1 /* Icon.png */; };
+		9B36DB10307096DD00B21FE1 /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB0F307096DD00B21FE1 /* Style.css */; };
+		9B36DB12307096DD00B21FE1 /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB11307096DD00B21FE1 /* Script.js */; };
+		9B36DB14307096DD00B21FE1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B36DB13307096DD00B21FE1 /* ViewController.swift */; };
+		9B36DB17307096DD00B21FE1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB15307096DD00B21FE1 /* Main.storyboard */; };
+		9B36DB19307096DE00B21FE1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB18307096DE00B21FE1 /* Assets.xcassets */; };
+		9B36DB20307096DE00B21FE1 /* Amazon Results CostPerCount Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9B36DB1F307096DE00B21FE1 /* Amazon Results CostPerCount Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9B36DB25307096DE00B21FE1 /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B36DB24307096DE00B21FE1 /* SafariWebExtensionHandler.swift */; };
+		9B36DB34307096DF00B21FE1 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB31307096DF00B21FE1 /* icons */; };
+		9B36DB35307096DF00B21FE1 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB32307096DF00B21FE1 /* manifest.json */; };
+		9B36DB36307096DF00B21FE1 /* src in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB33307096DF00B21FE1 /* src */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9B36DB21307096DE00B21FE1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9B36DAFC307096DD00B21FE1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9B36DB1E307096DE00B21FE1;
+			remoteInfo = "Amazon Results CostPerCount Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9B36DB2C307096DE00B21FE1 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9B36DB20307096DE00B21FE1 /* Amazon Results CostPerCount Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		9B36DB04307096DD00B21FE1 /* Amazon Results CostPerCount.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Amazon Results CostPerCount.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B36DB07307096DD00B21FE1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		9B36DB0B307096DD00B21FE1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		9B36DB0D307096DD00B21FE1 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		9B36DB0F307096DD00B21FE1 /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		9B36DB11307096DD00B21FE1 /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		9B36DB13307096DD00B21FE1 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		9B36DB16307096DD00B21FE1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		9B36DB18307096DE00B21FE1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		9B36DB1A307096DE00B21FE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9B36DB1F307096DE00B21FE1 /* Amazon Results CostPerCount Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Amazon Results CostPerCount Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B36DB24307096DE00B21FE1 /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		9B36DB26307096DE00B21FE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		9B36DB31307096DF00B21FE1 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = Resources/icons; sourceTree = "<group>"; };
+		9B36DB32307096DF00B21FE1 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = Resources/manifest.json; sourceTree = "<group>"; };
+		9B36DB33307096DF00B21FE1 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = Resources/src; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9B36DB01307096DD00B21FE1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B36DB1C307096DE00B21FE1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9B36DAFB307096DD00B21FE1 = {
+			isa = PBXGroup;
+			children = (
+				9B36DB06307096DD00B21FE1 /* Amazon Results CostPerCount */,
+				9B36DB23307096DE00B21FE1 /* Amazon Results CostPerCount Extension */,
+				9B36DB05307096DD00B21FE1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9B36DB05307096DD00B21FE1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9B36DB04307096DD00B21FE1 /* Amazon Results CostPerCount.app */,
+				9B36DB1F307096DE00B21FE1 /* Amazon Results CostPerCount Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9B36DB06307096DD00B21FE1 /* Amazon Results CostPerCount */ = {
+			isa = PBXGroup;
+			children = (
+				9B36DB07307096DD00B21FE1 /* AppDelegate.swift */,
+				9B36DB13307096DD00B21FE1 /* ViewController.swift */,
+				9B36DB15307096DD00B21FE1 /* Main.storyboard */,
+				9B36DB18307096DE00B21FE1 /* Assets.xcassets */,
+				9B36DB1A307096DE00B21FE1 /* Info.plist */,
+				9B36DB09307096DD00B21FE1 /* Resources */,
+			);
+			path = "Amazon Results CostPerCount";
+			sourceTree = "<group>";
+		};
+		9B36DB09307096DD00B21FE1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9B36DB0A307096DD00B21FE1 /* Main.html */,
+				9B36DB0D307096DD00B21FE1 /* Icon.png */,
+				9B36DB0F307096DD00B21FE1 /* Style.css */,
+				9B36DB11307096DD00B21FE1 /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		9B36DB23307096DE00B21FE1 /* Amazon Results CostPerCount Extension */ = {
+			isa = PBXGroup;
+			children = (
+				9B36DB30307096DF00B21FE1 /* Resources */,
+				9B36DB24307096DE00B21FE1 /* SafariWebExtensionHandler.swift */,
+				9B36DB26307096DE00B21FE1 /* Info.plist */,
+			);
+			path = "Amazon Results CostPerCount Extension";
+			sourceTree = "<group>";
+		};
+		9B36DB30307096DF00B21FE1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9B36DB31307096DF00B21FE1 /* icons */,
+				9B36DB32307096DF00B21FE1 /* manifest.json */,
+				9B36DB33307096DF00B21FE1 /* src */,
+			);
+			name = Resources;
+			path = "Amazon Results CostPerCount Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9B36DB03307096DD00B21FE1 /* Amazon Results CostPerCount */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9B36DB2D307096DE00B21FE1 /* Build configuration list for PBXNativeTarget "Amazon Results CostPerCount" */;
+			buildPhases = (
+				9B36DB00307096DD00B21FE1 /* Sources */,
+				9B36DB01307096DD00B21FE1 /* Frameworks */,
+				9B36DB02307096DD00B21FE1 /* Resources */,
+				9B36DB2C307096DE00B21FE1 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9B36DB22307096DE00B21FE1 /* PBXTargetDependency */,
+			);
+			name = "Amazon Results CostPerCount";
+			packageProductDependencies = (
+			);
+			productName = "Amazon Results CostPerCount";
+			productReference = 9B36DB04307096DD00B21FE1 /* Amazon Results CostPerCount.app */;
+			productType = "com.apple.product-type.application";
+		};
+		9B36DB1E307096DE00B21FE1 /* Amazon Results CostPerCount Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9B36DB29307096DE00B21FE1 /* Build configuration list for PBXNativeTarget "Amazon Results CostPerCount Extension" */;
+			buildPhases = (
+				9B36DB1B307096DE00B21FE1 /* Sources */,
+				9B36DB1C307096DE00B21FE1 /* Frameworks */,
+				9B36DB1D307096DE00B21FE1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Amazon Results CostPerCount Extension";
+			packageProductDependencies = (
+			);
+			productName = "Amazon Results CostPerCount Extension";
+			productReference = 9B36DB1F307096DE00B21FE1 /* Amazon Results CostPerCount Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9B36DAFC307096DD00B21FE1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					9B36DB03307096DD00B21FE1 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					9B36DB1E307096DE00B21FE1 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+				};
+			};
+			buildConfigurationList = 9B36DAFF307096DD00B21FE1 /* Build configuration list for PBXProject "Amazon Results CostPerCount" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 9B36DAFB307096DD00B21FE1;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9B36DB05307096DD00B21FE1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9B36DB03307096DD00B21FE1 /* Amazon Results CostPerCount */,
+				9B36DB1E307096DE00B21FE1 /* Amazon Results CostPerCount Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9B36DB02307096DD00B21FE1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B36DB0E307096DD00B21FE1 /* Icon.png in Resources */,
+				9B36DB17307096DD00B21FE1 /* Main.storyboard in Resources */,
+				9B36DB12307096DD00B21FE1 /* Script.js in Resources */,
+				9B36DB0C307096DD00B21FE1 /* Main.html in Resources */,
+				9B36DB19307096DE00B21FE1 /* Assets.xcassets in Resources */,
+				9B36DB10307096DD00B21FE1 /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B36DB1D307096DE00B21FE1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B36DB36307096DF00B21FE1 /* src in Resources */,
+				9B36DB35307096DF00B21FE1 /* manifest.json in Resources */,
+				9B36DB34307096DF00B21FE1 /* icons in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9B36DB00307096DD00B21FE1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B36DB14307096DD00B21FE1 /* ViewController.swift in Sources */,
+				9B36DB08307096DD00B21FE1 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B36DB1B307096DE00B21FE1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B36DB25307096DE00B21FE1 /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9B36DB22307096DE00B21FE1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9B36DB1E307096DE00B21FE1 /* Amazon Results CostPerCount Extension */;
+			targetProxy = 9B36DB21307096DE00B21FE1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		9B36DB0A307096DD00B21FE1 /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9B36DB0B307096DD00B21FE1 /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		9B36DB15307096DD00B21FE1 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9B36DB16307096DD00B21FE1 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		9B36DB27307096DE00B21FE1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		9B36DB28307096DE00B21FE1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		9B36DB2A307096DE00B21FE1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Amazon Results CostPerCount Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Amazon Results Sort by CostPerCount";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.2;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.acypher.AmazonResultsCostPerCount.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9B36DB2B307096DE00B21FE1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Amazon Results CostPerCount Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Amazon Results Sort by CostPerCount";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.2;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.acypher.AmazonResultsCostPerCount.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9B36DB2E307096DE00B21FE1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Amazon Results CostPerCount/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Amazon Results CostPerCount";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.2;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.acypher.AmazonResultsCostPerCount;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		9B36DB2F307096DE00B21FE1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Amazon Results CostPerCount/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Amazon Results CostPerCount";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.2;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.acypher.AmazonResultsCostPerCount;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9B36DAFF307096DD00B21FE1 /* Build configuration list for PBXProject "Amazon Results CostPerCount" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B36DB27307096DE00B21FE1 /* Debug */,
+				9B36DB28307096DE00B21FE1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9B36DB29307096DE00B21FE1 /* Build configuration list for PBXNativeTarget "Amazon Results CostPerCount Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B36DB2A307096DE00B21FE1 /* Debug */,
+				9B36DB2B307096DE00B21FE1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9B36DB2D307096DE00B21FE1 /* Build configuration list for PBXNativeTarget "Amazon Results CostPerCount" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B36DB2E307096DE00B21FE1 /* Debug */,
+				9B36DB2F307096DE00B21FE1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9B36DAFC307096DD00B21FE1 /* Project object */;
+}

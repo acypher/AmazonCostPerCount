@@ -1,9 +1,9 @@
-# Amazon Sort by Price per Count / Ounce
+# Amazon Results Sort by CostPerCount
 
-A Chrome extension (Manifest V3) that adds **"Price per oz/count"** to the
+A browser extension (Manifest V3) that adds **"Price per oz/count"** to the
 **Sort by:** pulldown on Amazon search-result pages (`https://www.amazon.com/s?k=...`).
 
-## Install
+## Install locally in Chrome
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and choose this folder (the one containing `manifest.json`).
@@ -56,3 +56,10 @@ Fixtures are real titles, prices and unit-price snippets captured from amazon.co
 - `src/unitprice.js` — pure parsing / unit-price / ordering logic (no DOM).
 - `src/content.js` — pulldown integration, card reading, reordering, badges.
 - `src/content.css` — badge and banner styles.
+
+## Publishing information
+
+- [Store description](docs/description.md)
+- [Privacy policy](docs/privacy.md)
+- [Support](docs/support.md)
+- Firefox's Manifest V3 add-on ID and no-data-collection declaration are in `manifest.json`.

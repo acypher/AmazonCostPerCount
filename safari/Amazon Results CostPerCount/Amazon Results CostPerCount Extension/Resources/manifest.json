@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Amazon Results Sort by CostPerCount",
+  "short_name": "CostPerCount",
+  "version": "1.0.2",
+  "description": "Sorts Amazon search results by price per ounce or count and flags misleading unit prices.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.amazon.com/s?*",
+        "https://www.amazon.com/s/*"
+      ],
+      "js": [
+        "src/unitprice.js",
+        "src/content.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
