@@ -3,6 +3,16 @@ const { execFileSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
 const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+const versionFiles = [
+  'package.json', 'manifest.json',
+  'safari/Amazon Results CostPerCount/Amazon Results CostPerCount Extension/Resources/manifest.json',
+  'safari/Amazon Results CostPerCount/Amazon Results CostPerCount.xcodeproj/project.pbxproj',
+];
+const unstagedVersions = git('diff', '--name-only', '--', ...versionFiles).trim();
+if (unstagedVersions) {
+  console.error(`Version files have unstaged changes. Stage or revert them before committing:\n${unstagedVersions}`);
+  process.exit(1);
+}
 const staged = git('diff', '--cached', '--name-only', '--diff-filter=ACMR', 'HEAD').trim().split('\n');
 const safariSource = 'safari/Amazon Results CostPerCount/Amazon Results CostPerCount Extension/Resources/src/';
 const codeChanged = staged.some((file) => file.startsWith('src/') || file.startsWith(safariSource));
