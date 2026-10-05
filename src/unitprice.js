@@ -3,9 +3,8 @@
  *
  * Pure functions (no DOM) so they can be unit-tested in Node.
  *
- * Policy (per Allen):
- *   - Prefer price per OUNCE (weight oz and fluid oz are merged into one "oz" group).
- *   - Otherwise price per COUNT.
+ * Calculate price per ounce and per count independently when the listing supplies
+ * enough information. The mix of results on the page determines which leads.
  *   - Amazon's own unit price is used when it is trustworthy, but it is cross-checked
  *     against the size/pack info in the title because Amazon often:
  *       (a) labels a single package as "/count" (so $/count == full price) when the
@@ -97,7 +96,11 @@
     const found = [];
     const add = (re) => { let m; re.lastIndex = 0; while ((m = re.exec(t))) { const n = parseNum(m[1]); if (n >= 1 && n <= 1000 && Number.isInteger(n)) found.push(n); } };
     add(/\b(?:pack|case|set|box|carton|tray)\s+of\s+(\d+)\b/gi);
-    add(/(?<![\w.])(\d+)\s*-?\s*(?:packs?|pks?|pck|pk\.)(?![a-z])/gi);
+    // A slash list such as "25/50/100/200 Pack ... (50 Pack)" is a choice list;
+    // the number attached to Pack in the list is not the selected quantity.
+    add(/(?<![\w./])(\d+)\s*-?\s*(?:packs?|pks?|pck|pk\.)(?![a-z])/gi);
+    add(/(?<![\w.])(\d+)\s*[x×]\s*\d+\s*-?\s*(?:count|ct|pcs?|pieces?)(?![a-z])/gi);
+    add(/\b\d+\s*-?\s*(?:count|ct|pcs?|pieces?)\s*[x×*]\s*(\d+)\b/gi);
     add(/(?<=\d\s*(?:fl\.?\s*oz|oz|ounces?|lbs?|pounds?|g|grams?|kg|ml|l|liters?|litres?|gallons?)\.?\s*)[x×*]\s*(\d+)\b/gi);
     add(/(?<![\w.])(\d+)\s*[x×]\s*\d*\.?\d+\s*-?\s*(?:fl\.?\s*oz|oz|ounces?|lbs?|g|grams?|ml|l|liters?)(?![a-z])/gi);
     add(/(?<![\w.])(\d+)\s*\(\s*\d*\.?\d+\s*-?\s*(?:fl\.?\s*oz|oz|ounces?|lbs?|g|ml|l)\.?\s*\)/gi);
@@ -115,6 +118,11 @@
     const re = /(?<![\w.])(\d{1,3}(?:,\d{3})+|\d+)\s*-?\s*(?:count|ct|cnt|pcs?|pieces?|pods?|k-?cups?|capsules?|caps|tablets?|tabs|softgels?|gummies|sheets?|rolls?|wipes|bags|packets|sachets)(?![a-z])/gi;
     let m; const out = [];
     while ((m = re.exec(String(title || '')))) { const n = parseNum(m[1]); if (n > 0) out.push(n); }
+    // "2 packs of 20" describes 20 items in each pack, even without "20 count".
+    const packsOf = String(title || '').match(/\b\d+\s*-?\s*packs?\s+of\s+(\d+)\b(?!\s*(?:fl\.?\s*oz|oz|ounces?|lbs?|pounds?|g|grams?|kg|ml|liters?|litres?)\b)/i);
+    if (packsOf) out.push(parseNum(packsOf[1]));
+    const perPack = String(title || '').match(/\b(\d+)\s+(?:items?\s+)?(?:per|in\s+each)\s+(?:pack|package|bag|box)\b/i);
+    if (perPack) out.push(parseNum(perPack[1]));
     return out.length ? Math.max(...out) : null;
   }
 
@@ -234,14 +242,145 @@
     return null;
   }
 
-  /**
-   * Order: "oz" group first, then "count", then any other unit groups (largest first),
-   * then items with no unit price. Stable within ties.
-   */
-  function sortKeyed(items) {
+  /** All usable measures for a listing. A missing measure stays null. */
+  function computeUnitPrices(item) {
+    const price = item.price;
+    if (!(price > 0)) return { perOunce: null, perCount: null, ouncesPerCount: null, ounceQuantity: null, countQuantity: null, countBasis: null, other: null };
+
+    const title = item.title || '';
+    const count = findCount(title);
+    const mult = packMultiplier(title);
+    const primary = computeUnitPrice(item);
+    const au = item.amazonUnit || null;
+    const amazonCount = au && normalizeCountish(au.unitText) === 'count' ? price / (au.value / au.per) : null;
+
+    let countQuantity = null;
+    let countBasis = null;
+    if (count) {
+      countQuantity = count * mult;
+      countBasis = 'title-items';
+    } else if (mult > 1) {
+      countQuantity = mult;
+      countBasis = 'title-pack';
+    } else if (amazonCount > 1 && Number.isFinite(amazonCount)) {
+      countQuantity = amazonCount;
+      countBasis = 'amazon';
+    }
+
+    let perCount = null;
+    if (countQuantity) {
+      // Compare the displayed unit price at cent precision. Inferring a count
+      // from a rounded $0.06/count can be far from the real count of 500.
+      const amazonPerCount = au && normalizeCountish(au.unitText) === 'count' ? au.value / au.per : null;
+      const corrected = !!(amazonPerCount && !agrees(price, countQuantity, amazonPerCount));
+      perCount = {
+        group: 'count', value: price / countQuantity, unitLabel: 'count',
+        source: countBasis === 'title-items' ? `Title: ${count} items${mult > 1 ? ` × ${mult} packs` : ''}` :
+          countBasis === 'title-pack' ? `Title: ${mult} packages; inner item count unknown` : 'Amazon unit price',
+        corrected,
+      };
+    }
+
+    // The existing ounce calculation checks Amazon's unit price against the title
+    // and fixes known pack mistakes. Do not turn a capacity (such as 13-gallon
+    // trash bags or a pod that brews 7.8 oz) into a product weight.
+    const perOunce = primary?.group === 'oz' ? primary : null;
+    const other = primary && primary.group !== 'oz' && primary.group !== 'count' ? primary : null;
+    const ounceQuantity = perOunce?.value > 0 ? price / perOunce.value : null;
+    const ouncesPerCount = ounceQuantity && countQuantity ? ounceQuantity / countQuantity : null;
+    return { perOunce, perCount, ouncesPerCount, ounceQuantity, countQuantity, countBasis, other };
+  }
+
+  // Offer only cutoffs that separate the known order sizes on this page. Keeping
+  // the active cutoff lets a selection survive pagination with a different range.
+  const SIZE_CUTOFFS = {
+    count: [500, 100, 50, 25, 10],
+    oz: [1280, 80, 16, 4, 1],
+  };
+  function maxOrderSizeOptions(items, selected = null) {
+    return Object.entries(SIZE_CUTOFFS).flatMap(([unit, cutoffs]) => {
+      const sizes = items.map((it) => it.measures?.[unit === 'count' ? 'countQuantity' : 'ounceQuantity'])
+        .filter((size) => Number.isFinite(size) && size > 0);
+      return cutoffs.filter((value) =>
+        (sizes.some((size) => size <= value) && sizes.some((size) => size > value)) ||
+        (selected?.unit === unit && selected.value === value))
+        .map((value) => ({ unit, value, matches: sizes.filter((size) => size <= value).length }));
+    });
+  }
+
+  function matchesMaxOrderSize(measures, selected) {
+    if (!selected) return true;
+    const size = measures?.[selected.unit === 'count' ? 'countQuantity' : 'ounceQuantity'];
+    return Number.isFinite(size) && size > 0 && size <= selected.value;
+  }
+
+  function median(values) {
+    if (!values.length) return null;
+    const sorted = values.slice().sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  /** A small package count can masquerade as a count of individual items. */
+  function isPackageCountOutlier(measures, referenceOzPerCount) {
+    return !!(referenceOzPerCount && measures.countBasis !== 'title-items' &&
+      measures.countQuantity <= 5 && measures.ouncesPerCount > 4 * referenceOzPerCount);
+  }
+
+  /** Use title item counts to establish the normal ounces per item on this page. */
+  function ouncePerCountReference(items) {
+    const ratios = items.map((it) => it.measures).filter((m) =>
+      m?.countBasis === 'title-items' && m.ouncesPerCount > 0).map((m) => m.ouncesPerCount);
+    return ratios.length >= 3 ? median(ratios) : null;
+  }
+
+  /** "Lots" means at least 60% of listings with a usable ounce or count price. */
+  function preferredUnit(items, referenceOzPerCount = ouncePerCountReference(items)) {
+    const comparable = items.filter((it) => it.measures?.perCount || it.measures?.perOunce);
+    if (!comparable.length) return 'oz';
+    const countEntries = comparable.filter((it) => it.measures.perCount &&
+      !isPackageCountOutlier(it.measures, referenceOzPerCount)).length;
+    return countEntries / comparable.length >= 0.6 ? 'count' : 'oz';
+  }
+
+  function selectUnit(measures, preferred, referenceOzPerCount) {
+    if (!measures) return null;
+    const count = isPackageCountOutlier(measures, referenceOzPerCount) ? null : measures.perCount;
+    return preferred === 'count' ? count || measures.perOunce || measures.other :
+      measures.perOunce || count || measures.other;
+  }
+
+  /** Page averages use only comparable, positive unit prices. */
+  function pageUnitStats(items, referenceOzPerCount = ouncePerCountReference(items)) {
+    const summarize = (values) => {
+      if (!values.length) return null;
+      const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+      const deviation = Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
+      return { mean, deviation, count: values.length };
+    };
+    const measures = items.map((item) => item.measures).filter(Boolean);
+    const ounces = measures.map((m) => m.perOunce?.value).filter((value) => Number.isFinite(value) && value > 0);
+    const counts = measures.filter((m) => !isPackageCountOutlier(m, referenceOzPerCount))
+      .map((m) => m.perCount?.value).filter((value) => Number.isFinite(value) && value > 0);
+    return { perOunce: summarize(ounces), perCount: summarize(counts) };
+  }
+
+  /** Require both a twofold price difference and a one-standard-deviation gap. */
+  function priceOutlier(unit, stats) {
+    if (!unit || !stats || stats.count < 4 || !(unit.value > 0)) return null;
+    const gap = Math.abs(unit.value - stats.mean);
+    if (gap <= stats.deviation) return null;
+    if (unit.value < stats.mean / 2) return 'cost is far less than usual';
+    if (unit.value > stats.mean * 2) return 'cost is far more than usual';
+    return null;
+  }
+
+  /** Preferred unit first, then the other usable units, then unknowns. */
+  function sortKeyed(items, preferred = 'oz') {
     const groupSizes = {};
     for (const it of items) if (it.unit) groupSizes[it.unit.group] = (groupSizes[it.unit.group] || 0) + 1;
-    const rankOf = (g) => (g === 'oz' ? 0 : g === 'count' ? 1 : 2);
+    const secondary = preferred === 'count' ? 'oz' : 'count';
+    const rankOf = (g) => (g === preferred ? 0 : g === secondary ? 1 : 2);
     return items
       .map((it, i) => ({ it, i }))
       .sort((a, b) => {
@@ -263,7 +402,9 @@
   }
 
   const api = {
-    computeUnitPrice, parseAmazonUnit, parsePrice, sortKeyed, formatUnitPrice,
+    computeUnitPrice, computeUnitPrices, preferredUnit, ouncePerCountReference,
+    selectUnit, pageUnitStats, priceOutlier, sortKeyed, parseAmazonUnit, parsePrice, formatUnitPrice,
+    maxOrderSizeOptions, matchesMaxOrderSize,
     // exposed for tests
     _findSizes: findSizes, _pickSize: pickSize, _packMultiplier: packMultiplier, _findCount: findCount,
   };

@@ -76,7 +76,7 @@ test('Metric Amazon units convert to per ounce', () => {
   assert.equal(r.group, 'oz'); close(r.value, 10 / (500 / 29.5735));
 });
 
-test('Sorting: oz group first, then count, then other units, then unknown', () => {
+test('Sorting follows the selected leading unit, then other units and unknowns', () => {
   const mk = (id, unit) => ({ id, unit });
   const items = [
     mk('unk', null),
@@ -87,6 +87,7 @@ test('Sorting: oz group first, then count, then other units, then unknown', () =
     mk('o1', { group: 'oz', value: 0.1 }),
   ];
   assert.deepEqual(CPC.sortKeyed(items).map((x) => x.id), ['o1', 'o2', 'c1', 'c2', 'sheet', 'unk']);
+  assert.deepEqual(CPC.sortKeyed(items, 'count').map((x) => x.id), ['c1', 'c2', 'o1', 'o2', 'sheet', 'unk']);
 });
 
 test('Title helpers', () => {
@@ -104,4 +105,143 @@ test('Title helpers', () => {
 test('Servings are not a pack count (Amazon $/oz already correct)', () => {
   const r = up('Organic Powdered Peanut Butter - 45 Servings 24 Ounce (Pack of 1)', '$23.49', '($0.98$0.98/ounce)');
   assert.equal(r.corrected, false); close(r.value, 23.49 / 24);
+});
+
+function measures(title, price, snippet) {
+  return CPC.computeUnitPrices({ title, price, amazonUnit: CPC.parseAmazonUnit(snippet) });
+}
+
+test('each listing can have ounce, count, and ounces-per-count prices', () => {
+  const staples = measures('50Pcs Landscape Fabric Pins, 6 Inch Garden Staples', 12.99, '($0.52/ounce)');
+  close(staples.perOunce.value, 0.52);
+  close(staples.perCount.value, 12.99 / 50);
+  close(staples.ouncesPerCount, (12.99 / 0.52) / 50);
+  assert.equal(staples.countBasis, 'title-items');
+
+  const cans = measures('Soda, 12 Fl Oz Cans (Pack of 24)', 12, '($0.50/count)');
+  close(cans.perOunce.value, 12 / 288);
+  close(cans.perCount.value, 12 / 24);
+  close(cans.ouncesPerCount, 12);
+});
+
+test('inner item count wins over a two- or five-package count', () => {
+  const two = measures('2 packs of 20 staples, 10 oz each', 20, '($10.00/count)');
+  assert.equal(two.countQuantity, 40);
+  close(two.perCount.value, 0.5);
+  assert.equal(two.perCount.corrected, true);
+
+  const five = measures('20 Count, Pack of 5', 25, '($5.00/count)');
+  assert.equal(five.countQuantity, 100);
+  close(five.perCount.value, 0.25);
+  assert.equal(CPC._findCount('2 packs of 24 oz'), null);
+  const perPack = measures('2 Pack, 20 items per pack', 20, '($10.00/count)');
+  assert.equal(perPack.countQuantity, 40);
+  assert.equal(measures('5 x 20 Count', 20, null).countQuantity, 100);
+  assert.equal(measures('20 Count x 5', 20, null).countQuantity, 100);
+  const choiceList = measures('25/50/100/150/200 Pack Garden Staples (50 Pack)', 8.99, '($0.18/count)');
+  assert.equal(choiceList.countQuantity, 50);
+  close(choiceList.perCount.value, 8.99 / 50);
+  assert.equal(choiceList.perCount.corrected, false);
+  const rounded = measures('500 Pack Garden Staples', 32.29, '($0.06/count)');
+  assert.equal(rounded.perCount.corrected, false);
+});
+
+test('result mix chooses the leading unit instead of always putting ounces first', () => {
+  const count = (n) => ({ measures: measures(`${n} Count Staples`, 10, null) });
+  const ounce = () => ({ measures: measures('16 Oz Peanut Butter', 10, null) });
+  const countHeavy = [count(50), count(100), count(200), ounce()];
+  const ounceHeavy = [count(50), ounce(), ounce(), ounce()];
+  assert.equal(CPC.preferredUnit(countHeavy), 'count');
+  assert.equal(CPC.preferredUnit(ounceHeavy), 'oz');
+  const selected = countHeavy.map((it) => ({ ...it, unit: CPC.selectUnit(it.measures, 'count', null) }));
+  assert.equal(CPC.sortKeyed(selected, 'count')[0].unit.group, 'count');
+});
+
+test('large ounces-per-count ratio prevents a small package count from leading', () => {
+  const normal = [
+    measures('20 Count, 20 Oz', 20, '($1.00/ounce)'),
+    measures('30 Count, 30 Oz', 30, '($1.00/ounce)'),
+    measures('40 Count, 40 Oz', 40, '($1.00/ounce)'),
+  ];
+  const packages = measures('5 Pack, 10 Oz each', 50, '($1.00/ounce)');
+  const items = [...normal, packages].map((m) => ({ measures: m }));
+  const reference = CPC.ouncePerCountReference(items);
+  assert.equal(reference, 1);
+  assert.equal(packages.ouncesPerCount, 10);
+  assert.equal(CPC.selectUnit(packages, 'count', reference).group, 'oz');
+  assert.equal(CPC.preferredUnit(items, reference), 'count');
+});
+
+test('a container capacity is not treated as saleable ounces', () => {
+  const bags = measures('13 Gallon Trash Bags, 120 Count, Pack of 1', 13.63, '($0.11/count)');
+  assert.equal(bags.perOunce, null);
+  close(bags.perCount.value, 13.63 / 120);
+  assert.equal(bags.ouncesPerCount, null);
+});
+
+test('page means compare count and ounce prices separately', () => {
+  const prices = [1, 1, 1, 4];
+  const items = prices.map((price) => ({ measures: {
+    perCount: { group: 'count', value: price },
+    perOunce: { group: 'oz', value: price / 2 },
+    countBasis: 'title-items',
+  } }));
+  const stats = CPC.pageUnitStats(items);
+  close(stats.perCount.mean, 1.75);
+  close(stats.perOunce.mean, 0.875);
+  assert.equal(stats.perCount.count, 4);
+  assert.equal(CPC.priceOutlier(items[3].measures.perCount, stats.perCount), 'cost is far more than usual');
+  assert.equal(CPC.priceOutlier(items[0].measures.perCount, stats.perCount), null);
+});
+
+test('an unusually low unit price is flagged; small samples are not', () => {
+  const items = [1, 4, 4, 4].map((price) => ({ measures: {
+    perCount: { group: 'count', value: price }, countBasis: 'title-items',
+  } }));
+  const stats = CPC.pageUnitStats(items);
+  assert.equal(CPC.priceOutlier(items[0].measures.perCount, stats.perCount), 'cost is far less than usual');
+  assert.equal(CPC.priceOutlier(items[1].measures.perCount, stats.perCount), null);
+  assert.equal(CPC.priceOutlier(items[0].measures.perCount, CPC.pageUnitStats(items.slice(0, 3)).perCount), null);
+});
+
+test('package counts excluded from count mean but ounces still included', () => {
+  const normal = [1, 1, 1].map(() => ({ measures: {
+    perCount: { group: 'count', value: 1 }, perOunce: { group: 'oz', value: 0.5 },
+    countBasis: 'title-items', countQuantity: 20, ouncesPerCount: 2,
+  } }));
+  const packageItem = { measures: {
+    perCount: { group: 'count', value: 20 }, perOunce: { group: 'oz', value: 0.5 },
+    countBasis: 'title-pack', countQuantity: 2, ouncesPerCount: 20,
+  } };
+  const stats = CPC.pageUnitStats([...normal, packageItem], 2);
+  assert.equal(stats.perCount.count, 3);
+  close(stats.perCount.mean, 1);
+  assert.equal(stats.perOunce.count, 4);
+});
+
+test('max order size choices reflect the current page and include exact cutoffs', () => {
+  const items = [10, 50, 100, 500, 560].map((n) => ({ measures: measures(`${n} Pack Garden Staples`, 20, null) }));
+  const options = CPC.maxOrderSizeOptions(items);
+  assert.deepEqual(options.filter((o) => o.unit === 'count').map((o) => o.value), [500, 100, 50, 25, 10]);
+  assert.equal(options.some((o) => o.unit === 'oz'), false);
+  assert.equal(CPC.matchesMaxOrderSize(items[3].measures, { unit: 'count', value: 500 }), true);
+  assert.equal(CPC.matchesMaxOrderSize(items[4].measures, { unit: 'count', value: 500 }), false);
+  assert.equal(CPC.matchesMaxOrderSize(null, { unit: 'count', value: 50 }), false);
+  assert.equal(CPC.matchesMaxOrderSize(null, null), true);
+  assert.deepEqual(CPC.maxOrderSizeOptions(items, { unit: 'oz', value: 16 }).at(-1),
+    { unit: 'oz', value: 16, matches: 0 });
+});
+
+test('max ounce size uses the whole order including multipacks', () => {
+  const items = [
+    measures('Single 4 oz jar', 4, null),
+    measures('16 oz jar', 8, null),
+    measures('12 fl oz cans, pack of 12', 18, null),
+    measures('5 lb bag', 25, null),
+  ];
+  close(items[2].ounceQuantity, 144);
+  assert.equal(CPC.matchesMaxOrderSize(items[2], { unit: 'oz', value: 80 }), false);
+  assert.equal(CPC.matchesMaxOrderSize(items[3], { unit: 'oz', value: 80 }), true);
+  const options = CPC.maxOrderSizeOptions(items.map((measures) => ({ measures })));
+  assert.deepEqual(options.filter((o) => o.unit === 'oz').map((o) => o.value), [80, 16, 4]);
 });

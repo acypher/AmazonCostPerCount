@@ -24,3 +24,15 @@
   border: 1px solid #b6d4ef;
   border-radius: 6px;
 }
+.cpc-size-excluded { display: none !important; }
+.cpc-max-size {
+  margin: 0 0 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #ddd;
+  color: #0f1111;
+}
+.cpc-max-size fieldset { margin: 0; padding: 0; border: 0; }
+.cpc-max-size legend { margin-bottom: 8px; font-size: 16px; font-weight: 700; }
+.cpc-max-size label { display: flex; align-items: center; gap: 6px; margin: 7px 0; font-size: 14px; cursor: pointer; }
+.cpc-max-size input { margin: 0; accent-color: #216e9b; }
+.cpc-max-size p { margin: 9px 0 0; font-size: 11px; line-height: 1.35; color: #565959; }
