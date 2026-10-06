@@ -194,6 +194,22 @@ test('page means compare count and ounce prices separately', () => {
   assert.equal(CPC.priceOutlier(items[0].measures.perCount, stats.perCount), null);
 });
 
+test('banner omits an incidental alternate unit and keeps a meaningful one', () => {
+  const perCount = { mean: 0.185, count: 56 };
+  const perOunce = { mean: 0.52, count: 1 };
+  assert.equal(CPC.bannerUnitSummary('count', { perCount, perOunce }),
+    'Sorted by price per count on this page. Mean cost per count: $0.185/count (56 items).');
+  assert.equal(CPC.bannerUnitSummary('count', { perCount, perOunce: { ...perOunce, count: 5 } }),
+    'Sorted by price per count on this page. Mean cost per count: $0.185/count (56 items).');
+  assert.equal(CPC.bannerUnitSummary('count', { perCount, perOunce: { ...perOunce, count: 6 } }),
+    'Sorted by price per count, then ounce on this page. Mean cost per count: $0.185/count (56 items); mean cost per oz: $0.520/oz (6 items).');
+  assert.equal(CPC.bannerUnitSummary('oz', { perCount: { ...perCount, count: 1 }, perOunce: { ...perOunce, count: 30 } }),
+    'Sorted by price per ounce on this page. Mean cost per oz: $0.520/oz (30 items).');
+  assert.equal(CPC.bannerUnitSummary('count', { perCount, perOunce: null },
+    ' Max order size: 50 count; showing 56 of 57 results on this page.'),
+    'Sorted by price per count on this page. Max order size: 50 count; showing 56 of 57 results on this page. Mean cost per count: $0.185/count (56 items).');
+});
+
 test('an unusually low unit price is flagged; small samples are not', () => {
   const items = [1, 4, 4, 4].map((price) => ({ measures: {
     perCount: { group: 'count', value: price }, countBasis: 'title-items',

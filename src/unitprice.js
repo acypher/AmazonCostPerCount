@@ -365,6 +365,24 @@
     return { perOunce: summarize(ounces), perCount: summarize(counts) };
   }
 
+  /** Mention the alternate unit only when it represents a useful share of the page. */
+  function bannerUnitSummary(preferred, stats, filterText = '') {
+    const primary = preferred === 'count' ? stats.perCount : stats.perOunce;
+    const secondary = preferred === 'count' ? stats.perOunce : stats.perCount;
+    const showSecondary = secondary?.count >= 3 && secondary.count >= (primary?.count || 0) * 0.1;
+    const meanText = (value, unit) => value ? `${formatUnitPrice({ value: value.mean, unitLabel: unit })} (${value.count} items)` : 'unavailable';
+    const sortText = preferred === 'count' ? 'count' : 'ounce';
+    const alternateText = preferred === 'count' ? 'ounce' : 'count';
+    const primaryMean = preferred === 'count' ?
+      `Mean cost per count: ${meanText(primary, 'count')}` :
+      `Mean cost per oz: ${meanText(primary, 'oz')}`;
+    const secondaryMean = preferred === 'count' ?
+      `mean cost per oz: ${meanText(secondary, 'oz')}` :
+      `mean cost per count: ${meanText(secondary, 'count')}`;
+    return `Sorted by price per ${sortText}${showSecondary ? `, then ${alternateText}` : ''} on this page.${filterText} ` +
+      `${primaryMean}${showSecondary ? `; ${secondaryMean}` : ''}.`;
+  }
+
   /** Require both a twofold price difference and a one-standard-deviation gap. */
   function priceOutlier(unit, stats) {
     if (!unit || !stats || stats.count < 4 || !(unit.value > 0)) return null;
@@ -403,7 +421,7 @@
 
   const api = {
     computeUnitPrice, computeUnitPrices, preferredUnit, ouncePerCountReference,
-    selectUnit, pageUnitStats, priceOutlier, sortKeyed, parseAmazonUnit, parsePrice, formatUnitPrice,
+    selectUnit, pageUnitStats, bannerUnitSummary, priceOutlier, sortKeyed, parseAmazonUnit, parsePrice, formatUnitPrice,
     maxOrderSizeOptions, matchesMaxOrderSize,
     // exposed for tests
     _findSizes: findSizes, _pickSize: pickSize, _packMultiplier: packMultiplier, _findCount: findCount,

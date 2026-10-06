@@ -18,8 +18,9 @@ After code changes, click the extension's reload icon in `chrome://extensions` a
   sort, so only the ~48–60 results currently loaded can be reordered.
 - Each card gets a badge with the unit price used and an alternate price when available.
   Hover it to see the sources and ounces per count. The banner shows the mean cost
-  per count and per ounce for usable results on the page. A `*` beside either price
-  means it is far less or far more than usual for that unit; hover for the direction.
+  for the leading unit and includes the other unit only when at least three results
+  and at least 10% as many results as the leading unit have that price. A `*` beside
+  either price means it is far less or far more than usual for that unit; hover for the direction.
   At least four comparable prices are needed, and a flagged price must be more than
   one standard deviation from the mean and less than half or more than twice it.
   An amber badge means Amazon's unit price disagreed with the title and was corrected.

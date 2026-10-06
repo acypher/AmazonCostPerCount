@@ -273,10 +273,8 @@
       d.className = 'cpc-banner';
       slot.before(d);
     }
-    const meanText = (value, unit) => value ? `${CPC.formatUnitPrice({ value: value.mean, unitLabel: unit })} (${value.count} items)` : 'unavailable';
     const filterText = maxSize ? ` Max order size: ${sizeLabel(maxSize)}; showing ${shown} of ${total} results on this page.` : '';
-    const message = `Sorted by price per ${preferred === 'count' ? 'count, then ounce' : 'ounce, then count'} on this page.${filterText} ` +
-      `Mean cost per count: ${meanText(stats.perCount, 'count')}; mean cost per oz: ${meanText(stats.perOunce, 'oz')}. ` +
+    const message = `${CPC.bannerUnitSummary(preferred, stats, filterText)} ` +
       '* marks a cost far less or far more than usual; hover for which. Amber means Amazon’s unit price disagreed with the title.';
     if (d.textContent !== message) d.textContent = message;
   }
