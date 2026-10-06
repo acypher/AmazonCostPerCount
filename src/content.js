@@ -46,7 +46,7 @@
       `${option.value / 16} lb` : `${option.value} oz`;
   }
 
-  function ensureSizeFacet(items, selected) {
+  function ensureSizeFacet(items, selected, preferred) {
     const sidebar = document.querySelector('#s-refinements');
     if (!sidebar) return;
     const options = CPC.maxOrderSizeOptions(items, selected);
@@ -64,7 +64,7 @@
       });
       sidebar.prepend(facet);
     }
-    const signature = JSON.stringify({ options, selected });
+    const signature = JSON.stringify({ options, selected, preferred });
     if (facet.dataset.signature === signature) return;
     facet.dataset.signature = signature;
     const fieldset = document.createElement('fieldset');
@@ -88,7 +88,7 @@
         selected?.unit === option.unit && selected.value === option.value);
     }
     const note = document.createElement('p');
-    note.textContent = 'Filters this page’s results. Items without the chosen size are hidden.';
+    note.textContent = `Filters this page’s 'per ${preferred === 'count' ? 'count' : 'oz'}' results`;
     fieldset.appendChild(note);
     facet.replaceChildren(fieldset);
   }
@@ -289,10 +289,10 @@
         const slots = [...document.querySelectorAll('.s-main-slot')];
         const items = slots.flatMap((slot) => [...slot.children].filter((el) => el.matches(CARD_SEL)).map((el) => cardInfo(el)));
         const maxSize = selectedSize();
-        ensureSizeFacet(items, maxSize);
         const shownItems = items.filter((it) => it.pending || CPC.matchesMaxOrderSize(it.measures, maxSize));
         const reference = CPC.ouncePerCountReference(shownItems);
         const preferred = maxSize?.unit === 'count' ? 'count' : maxSize?.unit === 'oz' ? 'oz' : CPC.preferredUnit(shownItems, reference);
+        ensureSizeFacet(items, maxSize, preferred);
         const stats = CPC.pageUnitStats(shownItems, reference);
         slots.forEach((slot) => sortSlot(slot, preferred, reference, stats, maxSize));
         banner(preferred, stats, maxSize, shownItems.length, items.length);
