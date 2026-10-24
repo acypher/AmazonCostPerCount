@@ -306,7 +306,8 @@
     const outlier = unit && info.comparison.key === view.key ? CPC.priceOutlier(unit, stats) : null;
     const text = unit ? CPC.formatUnitPrice(unit) + (outlier ? ' *' : '') : noPrice ? 'no price shown' : 'comparison unavailable';
     const tip = unit ? `${CPC.formatUnitPrice(unit)}: ${unit.source}` +
-      (unit.corrected ? '\nAmazon’s unit price disagreed with the title; this price was recomputed.' : '') +
+      (unit.corrected ? '\nQuantity was clarified; this price was recomputed.' : '') +
+      (info.photoStatus === 'checking' ? '\nChecking package photo…' : info.photoStatus === 'unconfirmed' ? '\nPackage photo could not confirm quantity.' : '') +
       (outlier ? `\n${outlier}` : '') : noPrice ? 'Amazon shows no price for this item on the results page' :
       'Could not confidently identify a comparable product type and quantity';
     if (b && b.textContent === text && b.title === tip) return;
@@ -415,6 +416,33 @@
       anchor = row;
     }
   }
+  // Photo evidence belongs to this exact listing/price/image, never just its ASIN.
+  const photoChecks = new Map();
+  function photoComparison(el, info, comparison) {
+    delete info.photoStatus;
+    delete el.dataset.cpcPhotoStatus;
+    const client = globalThis.CPCPhotoClient, photo = globalThis.CPCPhoto;
+    if (!client || !photo || !comparison.quantityEvidence?.needsImageCheck || !comparison.unit) return comparison;
+    const image = el.querySelector('img.s-image');
+    const url = photo.imageURL(image?.currentSrc || image?.src);
+    if (!url) return comparison;
+    const signature = JSON.stringify([location.href, el.dataset.asin, info.title, info.price, comparison.key, url]);
+    let record = photoChecks.get(signature);
+    if (!record) {
+      const promise = client.check(signature, url);
+      if (!promise) return comparison;
+      record = { status: 'checking' }; photoChecks.set(signature, record);
+      promise.then(lines => {
+        record.lines = lines; record.status = 'done';
+        // Ignore a response for a page that has since navigated elsewhere.
+        if (location.href === JSON.parse(signature)[0]) { clearTimeout(timer); timer = setTimeout(apply, 0); }
+      }).catch(() => { record.status = 'done'; record.lines = []; });
+    }
+    const resolved = record.status === 'done' ? photo.resolve(comparison, record.lines) : null;
+    info.photoStatus = resolved ? 'confirmed' : record.status === 'checking' ? 'checking' : 'unconfirmed';
+    el.dataset.cpcPhotoStatus = info.photoStatus;
+    return resolved || comparison;
+  }
   let choicesForPage = [];
   function matchesLimit(item, maxSize) {
     if (!maxSize || item.comparison.key !== view.key || !item.comparison.unit || item.pending) return true;
@@ -455,7 +483,8 @@
         const slots = [...document.querySelectorAll('.s-main-slot')];
         const items = slots.flatMap(slot => [...slot.children].filter(isAvailableResult).map(el => {
           const info = cardInfo(el);
-          return { el, ...info, comparison: Compare.classify(info, qs().get('k') || '') };
+          const comparison = photoComparison(el, info, Compare.classify(info, qs().get('k') || ''));
+          return { el, ...info, comparison };
         }));
         const choices = Compare.choices(items.map(it => it.comparison));
         const state = readState() || {};

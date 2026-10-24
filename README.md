@@ -14,7 +14,8 @@ After code changes, click the extension's reload icon in `chrome://extensions` a
 ## What it does
 
 Choose **Price per oz/count** to compare the products loaded on the current search
-page. All classification runs locally, with no agent, AI service, or network calls.
+page. All classification and photo recognition run locally, with no agent or AI service.
+Ambiguous quantities may trigger a download of the matching public Amazon product image.
 
 - Razor blades and refills compare by item count; bottled water compares by fluid
   ounces. A bottle or box count is package information, not a second price comparison.
@@ -26,7 +27,7 @@ page. All classification runs locally, with no agent, AI service, or network cal
   intact below the main results under **Additional product sections**, with Sponsored
   labels preserved.
 - Each badge shows one meaningful unit price. The banner average and outlier marks
-  use only the selected group. Amber marks a price corrected from title quantities;
+  use only the selected group. Amber marks a price corrected from title or confirmed package-photo quantities;
   an asterisk marks an unusually high or low price within the selected comparison.
 - **Max order size** and **Custom maximum** offer only the selected unit. Limits
   measure the whole order, including multipacks. Count limits must be whole numbers;
@@ -62,11 +63,12 @@ Fixtures are real titles, prices and unit-price snippets captured from amazon.co
 
 ## Files
 
-- `manifest.json` — MV3 manifest; content scripts only, no permissions requested.
+- `manifest.json` — MV3 manifest; Amazon search content scripts and public image-server permissions.
 - `src/unitprice.js` — pure parsing / unit-price / ordering logic (no DOM).
 - `src/comparison.js` — local product-form classification and meaningful unit quantities.
 - `src/content.js` — comparison controls, pulldown integration, grouping, badges.
 - `src/content.css` — badge and banner styles.
+- `src/photo.js`, `src/photo-client.js`, `ocr/` — conservative photo evidence, local recognition and bundled assets.
 
 ## Publishing information
 
@@ -74,3 +76,9 @@ Fixtures are real titles, prices and unit-price snippets captured from amazon.co
 - [Privacy policy](docs/privacy.md)
 - [Support](docs/support.md)
 - Firefox's Manifest V3 add-on ID and no-data-collection declaration are in `manifest.json`.
+
+### Package-photo checks (1.0.13)
+
+Ambiguous case totals (for example, “12 Count, 405.6 fl oz”) are cross-checked against Amazon's rounded unit price. Up to six ambiguous/conflicting listings per page get a local package-photo check. The bundled Tesseract worker reads only the matching public Amazon product image, and accepts clear `count × size unit` text at confidence 75 or higher only when the pack count and a plausible title quantity agree. Conflicting variants, unreadable text, missing units and mismatches leave the text calculation intact. Hover over a price to see its evidence. A confirmed photo updates prices, sorting, means and size filters together. No model service or API key is needed.
+
+Bundled OCR: Tesseract.js 7.0.0, its LSTM WebAssembly core, and English best_int data from @tesseract.js-data/eng 1.0.0. License notices are in `ocr/vendor/`.

@@ -3,7 +3,8 @@ const { execFileSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
 const releasePaths = [
-  'src',
+  'src', 'ocr',
+  'safari/Amazon Results CostPerCount/Amazon Results CostPerCount Extension/Resources/ocr',
   'safari/Amazon Results CostPerCount/Amazon Results CostPerCount Extension/Resources/src',
   'package.json',
   'manifest.json',

@@ -75,9 +75,21 @@
       }
       // Explicit whole-order totals take precedence over repeated pack metadata.
       const totalSize = totalSizes.includes(size);
-      const quantity = size.oz * (totalSize ? 1 : mult);
-      return { quantity, source: `Title: ${size.text.trim()}${mult > 1 && !totalSize ? ` × ${mult} packages` : ''}`,
-        corrected: !!(unitValue && item.price > 0 && Math.abs(item.price / quantity - unitValue) > 0.0051 + unitValue * 0.03) };
+      let quantity = size.oz * (totalSize ? 1 : mult);
+      // "(12 Count) 405.6 fl oz" can describe the CASE total. Only use the
+      // rounded unit-price cross-check when the title does not explicitly say
+      // the size is per bottle / followed by a Pack of N convention.
+      const explicitEach = /\b(?:each|per\s+(?:bottle|can|item|pack)|pack\s+of)\b|\b\d+\s*[x×]\s*\d/i.test(title);
+      const ambiguous = mult > 1 && !totalSize && !explicitEach;
+      const candidates = [{ quantity, packCount: mult }];
+      if (ambiguous) candidates.push({ quantity: size.oz, packCount: mult });
+      const agrees = q => unitValue > 0 && item.price > 0 &&
+        Math.abs(item.price / q - unitValue) <= 0.0051 + unitValue * 0.03;
+      const totalByUnitPrice = ambiguous && agrees(size.oz) && !agrees(quantity);
+      if (totalByUnitPrice) quantity = size.oz;
+      return { quantity, source: `${totalByUnitPrice ? 'Title total, confirmed by Amazon unit price' : 'Title'}: ${size.text.trim()}${mult > 1 && !totalSize && !totalByUnitPrice ? ` × ${mult} packages` : ''}`,
+        quantityEvidence: { candidates, packCount: mult, needsImageCheck: totalByUnitPrice || (ambiguous && !agrees(quantity)) || !!(unitValue && !agrees(quantity)) },
+        corrected: totalByUnitPrice || !!(unitValue && item.price > 0 && Math.abs(item.price / quantity - unitValue) > 0.0051 + unitValue * 0.03) };
     }
     if (unitValue > 0 && item.price > 0) return { quantity: item.price / unitValue, source: 'Amazon unit price', corrected: false };
     return { quantity: null, source: 'Quantity unavailable', corrected: false };
@@ -135,7 +147,7 @@
     // they must not introduce an irrelevant ounce comparison. Refill kits that
     // include a handle still reach the discrete-item branch above.
     if (/\brazor\s+(?:blades?|refills?)\b/.test(q) && key !== 'count') return unknown();
-    let quantity, source, corrected = false;
+    let quantity, source, quantityEvidence, corrected = false;
     if (key === 'count') {
       quantity = countQuantity(title, item);
       source = quantity ? `Item count: ${quantity}` : 'Item count unavailable';
@@ -144,9 +156,9 @@
         const price = item.price / quantity, given = au.value / au.per;
         corrected = !!(item.price > 0 && Math.abs(price - given) > 0.0051 + given * 0.03);
       }
-    } else ({quantity, source, corrected} = commodityQuantity(title, item, key));
+    } else ({quantity, source, corrected, quantityEvidence} = commodityQuantity(title, item, key));
     const valid = Number.isFinite(quantity) && quantity > 0 && Number.isFinite(item.price) && item.price > 0;
-    return { key, form, quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : null,
+    return { key, form, quantityEvidence, quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : null,
       unit: valid ? { group: key, value: item.price / quantity, unitLabel, source, corrected } : null };
   }
 

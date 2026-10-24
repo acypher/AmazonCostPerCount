@@ -15,10 +15,11 @@ function markup(item) {
   return `<div data-component-type="s-search-result" data-asin="${item.id}" class="${item.classes || ''}" ${item.hidden ? 'data-nsp-hidden' : ''} ${item.retained ? 'data-nsp-retained' : ''}>
     <div data-cy="title-recipe"><h2>${item.title}</h2></div>
     <div data-cy="price-recipe"><span class="a-price"><span class="a-offscreen">$${item.price.toFixed(2)}</span></span>${item.unit ? ` ($${item.unit.replace(/^\$/, '')})` : ''}</div>
+    ${item.image ? `<img class="s-image" src="${item.image}">` : ''}
     ${item.retained || item.hidden ? '<span>Sponsored</span>' : ''}</div>`;
 }
 
-function fixture(items, { query = 'dishwasher detergent', storage = new Map(), page = 1, nsp = false, active = true } = {}) {
+function fixture(items, { query = 'dishwasher detergent', storage = new Map(), page = 1, nsp = false, active = true, photoClient = null } = {}) {
   const { document, window } = parseHTML(`<html><body>${nsp ? '<style id="nsp-style"></style>' : ''}<input id="twotabsearchtextbox" value="original search"><div id="search"><select id="s-result-sort-select"><option value="relevance">Featured</option></select><aside id="s-refinements"></aside><div class="s-main-slot">${items.map(markup).join('')}</div></div></body></html>`);
   // linkedom has no form validation or numeric-value implementation; supply those browser primitives.
   window.HTMLInputElement.prototype.setCustomValidity = function (value) { this.validationMessage = value; };
@@ -42,6 +43,7 @@ function fixture(items, { query = 'dishwasher detergent', storage = new Map(), p
   }
   const context = vm.createContext({
     document, window, location, sessionStorage, CPC, CPCCompare: require('../src/comparison.js'),
+    CPCPhoto: require('../src/photo.js'), CPCPhotoClient: photoClient,
     URLSearchParams, Event: window.Event, Element: window.Element, HTMLInputElement: window.HTMLInputElement,
     MutationObserver: Observer,
     getComputedStyle: node => ({ display: node.style?.display === 'none' || node.hidden || node.hasAttribute('data-nsp-hidden') || node.classList.contains('cpc-size-excluded') ? 'none' : 'block' }),
@@ -243,4 +245,45 @@ test('all-unknown results remain visible with no comparison radios or usable siz
   assert.ok(h.cards().every(card => !card.classList.contains('cpc-size-excluded')));
   assert.match(h.document.querySelector('.cpc-group-heading').textContent, /Other results/);
   assert.deepEqual(h.warnings, []);
+});
+
+const photoWater = (unit = '') => ({ id: 'B006O38N0Q', title: 'Acqua Panna Natural Spring Water, Plastic Water Bottles (12 Count) 405.6 fl oz', price: 39.60, unit, image: 'https://m.media-amazon.com/images/I/81iQjBqnrEL._AC_UL320_.jpg' });
+test('photo correction updates ordering, mean and size filters together, without resetting typed text', async () => {
+  let finish, calls = 0;
+  const photoClient = { check() { calls++; return new Promise(resolve => { finish = resolve; }); } };
+  const h = fixture([photoWater(), water('B000000001', 10, 10, 8), water('B000000002', 10, 10, 12)], { query: 'mineral water', photoClient });
+  assert.equal(h.cards()[0].dataset.asin, 'B006O38N0Q');
+  applyLimit(h, 500);
+  const card = h.document.querySelector('[data-asin="B006O38N0Q"]');
+  assert.equal(card.dataset.cpcPhotoStatus, 'checking');
+  assert.equal(card.classList.contains('cpc-size-excluded'), true);
+  const input = h.document.querySelector('#cpc-custom-max-size'); input.value = '450';
+  finish([{ text: '12x 1L', confidence: 79 }]);
+  await Promise.resolve(); h.flush();
+  assert.equal(card.dataset.cpcPhotoStatus, 'confirmed');
+  assert.equal(card.classList.contains('cpc-size-excluded'), false);
+  assert.equal(h.cards()[0].dataset.asin, 'B000000001');
+  assert.match(card.querySelector('.cpc-badge').textContent, /\$0.098\/fl oz/);
+  assert.match(card.querySelector('.cpc-badge').title, /Package photo: 12 × 1 L/);
+  assert.match(h.document.querySelector('#cpc-banner').textContent, /Mean price: \$0.099\/fl oz \(3 products\)/);
+  assert.equal(input.value, '450');
+  h.mutate(() => {}); assert.equal(calls, 1);
+});
+test('failed photo check keeps title/Amazon cross-check and does not retry on page mutations', async () => {
+  let calls = 0;
+  const h = fixture([photoWater('$0.10/fluid ounce')], { query: 'mineral water', photoClient: { check() { calls++; return Promise.resolve([]); } } });
+  await Promise.resolve(); h.flush();
+  const card = h.cards()[0];
+  assert.equal(card.dataset.cpcPhotoStatus, 'unconfirmed');
+  assert.match(card.querySelector('.cpc-badge').textContent, /\$0.098\/fl oz/);
+  assert.match(card.querySelector('.cpc-badge').title, /could not confirm/);
+  h.mutate(() => {}); assert.equal(calls, 1);
+});
+test('photo response for an old title/price is not applied to a changed listing', async () => {
+  const requests = [];
+  const h = fixture([photoWater()], { query: 'mineral water', photoClient: { check() { return new Promise(resolve => requests.push(resolve)); } } });
+  h.mutate(() => { h.cards()[0].querySelector('h2').textContent = 'Mineral Water 16.9 Fl Oz Bottles Pack of 6'; });
+  requests[0]([{ text: '12x 1L', confidence: 79 }]); await Promise.resolve(); h.flush();
+  assert.match(h.cards()[0].querySelector('.cpc-badge').title, /16.9 Fl Oz × 6 packages/);
+  assert.doesNotMatch(h.cards()[0].querySelector('.cpc-badge').title, /Package photo:/);
 });

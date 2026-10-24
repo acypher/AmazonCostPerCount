@@ -15,7 +15,7 @@ if (unstagedVersions) {
 }
 const staged = git('diff', '--cached', '--name-only', '--diff-filter=ACMR', 'HEAD').trim().split('\n');
 const safariSource = 'safari/Amazon Results CostPerCount/Amazon Results CostPerCount Extension/Resources/src/';
-const codeChanged = staged.some((file) => file.startsWith('src/') || file.startsWith(safariSource));
+const codeChanged = staged.some((file) => file.startsWith('src/') || file.startsWith('ocr/') || file.startsWith(safariSource) || file.startsWith(safariSource.replace(/src\/$/, 'ocr/')));
 if (!codeChanged) process.exit(0);
 
 const stagedText = (file) => git('show', `:${file}`);
