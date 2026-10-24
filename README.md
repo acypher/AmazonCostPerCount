@@ -40,7 +40,10 @@ After code changes, click the extension's reload icon in `chrome://extensions` a
   the entire multipack; weight and fluid ounces use the same cutoffs. A chosen
   cutoff excludes listings whose size in that unit is unknown and stays selected
   across pages of the same search. Limits are shown smallest first within each
-  unit, followed by **Any size**, which clears the limit.
+  unit, followed by **Any size**, which clears the limit. Beneath the options,
+  enter a **Custom maximum**, choose count or oz, and click **Apply** (or press
+  Enter). Count limits must be positive whole numbers; ounces may be fractional.
+  Custom limits also stay selected across pages of the same search.
 - The choice sticks for the tab while you page through the same search. A new search, or picking
   any of Amazon's own sort options, turns it off.
 

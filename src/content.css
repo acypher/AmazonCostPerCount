@@ -36,3 +36,19 @@
 .cpc-max-size label { display: flex; align-items: center; gap: 6px; margin: 7px 0; font-size: 14px; cursor: pointer; }
 .cpc-max-size input { margin: 0; accent-color: #216e9b; }
 .cpc-max-size p { margin: 9px 0 0; font-size: 11px; line-height: 1.35; color: #565959; }
+
+.cpc-custom-size { margin-top: 12px; }
+.cpc-custom-size-row { display: flex; align-items: center; gap: 5px; }
+.cpc-custom-size-row input { min-width: 0; width: 70px; flex: 1; }
+.cpc-custom-size-row input, .cpc-custom-size-row select, .cpc-custom-size-row button {
+  box-sizing: border-box;
+  height: 30px;
+  padding: 3px 5px;
+  border: 1px solid #888c8c;
+  border-radius: 4px;
+  background: white;
+  color: #0f1111;
+  font-size: 13px;
+}
+.cpc-custom-size-row button { cursor: pointer; background: #f0f2f2; }
+.cpc-custom-size-row button:hover { background: #e3e6e6; }

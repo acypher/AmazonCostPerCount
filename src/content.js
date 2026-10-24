@@ -62,15 +62,62 @@
         writeState({ ...pageKey(), maxSize });
         apply();
       });
+      const fieldset = document.createElement('fieldset');
+      const legend = document.createElement('legend');
+      legend.textContent = 'Max order size';
+      const choices = document.createElement('div');
+      choices.className = 'cpc-size-options';
+      const form = document.createElement('form');
+      form.className = 'cpc-custom-size';
+      const label = document.createElement('label');
+      label.htmlFor = 'cpc-custom-max-size';
+      label.textContent = 'Custom maximum';
+      const row = document.createElement('div');
+      row.className = 'cpc-custom-size-row';
+      const input = document.createElement('input');
+      input.id = 'cpc-custom-max-size';
+      input.type = 'number';
+      input.min = '0';
+      input.required = true;
+      input.placeholder = 'Enter limit';
+      const unit = document.createElement('select');
+      unit.setAttribute('aria-label', 'Custom maximum unit');
+      for (const value of ['count', 'oz']) {
+        const option = document.createElement('option');
+        option.value = option.textContent = value;
+        unit.appendChild(option);
+      }
+      const button = document.createElement('button');
+      button.type = 'submit';
+      button.textContent = 'Apply';
+      row.append(input, unit, button);
+      form.append(label, row);
+      form.addEventListener('input', () => input.setCustomValidity(''));
+      unit.addEventListener('change', () => {
+        input.step = unit.value === 'count' ? '1' : 'any';
+        input.setCustomValidity('');
+      });
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const value = input.valueAsNumber;
+        const valid = Number.isFinite(value) && value > 0 &&
+          (unit.value !== 'count' || Number.isSafeInteger(value));
+        input.setCustomValidity(valid ? '' : unit.value === 'count' ?
+          'Enter a positive whole number for count.' : 'Enter a number greater than zero.');
+        if (!form.reportValidity()) return;
+        writeState({ ...pageKey(), maxSize: { unit: unit.value, value } });
+        apply();
+      });
+      const note = document.createElement('p');
+      fieldset.append(legend, choices, form, note);
+      facet.appendChild(fieldset);
       sidebar.prepend(facet);
     }
     const signature = JSON.stringify({ options, selected, preferred });
     if (facet.dataset.signature === signature) return;
     facet.dataset.signature = signature;
-    const fieldset = document.createElement('fieldset');
-    const legend = document.createElement('legend');
-    legend.textContent = 'Max order size';
-    fieldset.appendChild(legend);
+    const choices = facet.querySelector('.cpc-size-options');
+    const labels = [];
     const addRadio = (labelText, value, unit, checked) => {
       const label = document.createElement('label');
       const input = document.createElement('input');
@@ -80,17 +127,28 @@
       if (unit) input.dataset.unit = unit;
       input.checked = checked;
       label.append(input, document.createTextNode(labelText));
-      fieldset.appendChild(label);
+      labels.push(label);
     };
     for (const option of options) {
       addRadio(`Up to ${sizeLabel(option)} (${option.matches})`, String(option.value), option.unit,
         selected?.unit === option.unit && selected.value === option.value);
     }
     addRadio('Any size', 'any', null, !selected);
-    const note = document.createElement('p');
+    choices.replaceChildren(...labels);
+    // Update controls only when the applied limit changes. Lazy-loaded results
+    // can refresh the choices without discarding a custom value being typed.
+    const selection = JSON.stringify(selected);
+    if (facet.dataset.selection !== selection) {
+      facet.dataset.selection = selection;
+      const input = facet.querySelector('#cpc-custom-max-size');
+      const unit = facet.querySelector('select');
+      unit.value = selected?.unit || preferred;
+      input.step = unit.value === 'count' ? '1' : 'any';
+      input.value = selected ? String(selected.value) : '';
+      input.setCustomValidity('');
+    }
+    const note = facet.querySelector('p');
     note.textContent = `Filters this page’s 'per ${preferred === 'count' ? 'count' : 'oz'}' results`;
-    fieldset.appendChild(note);
-    facet.replaceChildren(fieldset);
   }
 
   // ---------------- the Sort-by pulldown ----------------

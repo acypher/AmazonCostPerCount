@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Results Sort by CostPerCount",
   "short_name": "CostPerCount",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Sorts Amazon search results by price per ounce or count and flags misleading unit prices.",
   "browser_specific_settings": {
     "gecko": {
