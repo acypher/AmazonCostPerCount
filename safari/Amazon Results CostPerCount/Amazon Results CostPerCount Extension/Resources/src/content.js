@@ -295,7 +295,7 @@
   // Exclude rows hidden by No Sponsored or another page/extension rule.
   function isAvailableResult(card) {
     if (!card.matches(CARD_SEL)) return false;
-    if (document.getElementById('nsp-style') && card.closest('.AdHolder, [data-nsp-hidden]')) return false;
+    if (document.getElementById('nsp-style') && card.closest('[data-nsp-hidden], .AdHolder:not([data-nsp-retained])')) return false;
     for (let node = card; node; node = node.parentElement) {
       if (node.hidden) return false;
       if (!node.classList.contains('cpc-size-excluded') && getComputedStyle(node).display === 'none') return false;
@@ -381,6 +381,10 @@
 
   // Amazon re-renders parts of the page (pagination, filters, lazy widgets, the popover).
   let timer = null;
+  document.addEventListener('nsp:updated', () => {
+    clearTimeout(timer);
+    timer = setTimeout(apply, 0);
+  });
   const observer = new MutationObserver(() => {
     if (applying) return;
     clearTimeout(timer);

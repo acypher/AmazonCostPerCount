@@ -19,7 +19,7 @@ function card(classes = [], parentElement = null) {
   return {
     matches: () => true,
     classList: { contains: name => classes.includes(name) },
-    closest: () => classes.some(c => c === 'AdHolder' || c === 'data-nsp-hidden') ? {} : null,
+    closest: () => classes.includes('data-nsp-hidden') || (classes.includes('AdHolder') && !classes.includes('data-nsp-retained')) ? {} : null,
     parentElement, hidden: false, display: 'block',
   };
 }
@@ -46,4 +46,17 @@ test('external hidden rows and ancestors are excluded; visible ads count with No
   assert.equal(eligible(Object.assign(card(), { hidden: true })), false);
   assert.equal(eligible(card([], Object.assign(card(), { display: 'none' }))), false);
   assert.equal(eligible(card(['AdHolder'])), true);
+});
+
+
+test('unique sponsored results retained by No Sponsored participate in size choices', () => {
+  const eligible = fixture();
+  const unique = card(['AdHolder', 'data-nsp-retained']);
+  assert.equal(eligible(unique), true);
+  const filtered = Object.assign(card(['AdHolder', 'data-nsp-retained', 'cpc-size-excluded']), { display: 'none' });
+  assert.equal(eligible(filtered), true);
+  assert.equal(eligible(card(['AdHolder', 'data-nsp-retained', 'data-nsp-hidden'])), false);
+  const items = [{el: unique, measures: {countQuantity: 2}},
+    {el: card(), measures: {countQuantity: 10}}].filter(it => eligible(it.el));
+  assert.deepEqual(CPC.maxOrderSizeOptions(items).map(o => o.value), [2]);
 });
