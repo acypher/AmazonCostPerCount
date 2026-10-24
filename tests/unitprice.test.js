@@ -238,7 +238,7 @@ test('package counts excluded from count mean but ounces still included', () => 
 test('max order size choices reflect the current page and include exact cutoffs', () => {
   const items = [10, 50, 100, 500, 560].map((n) => ({ measures: measures(`${n} Pack Garden Staples`, 20, null) }));
   const options = CPC.maxOrderSizeOptions(items);
-  assert.deepEqual(options.filter((o) => o.unit === 'count').map((o) => o.value), [500, 100, 50, 25, 10]);
+  assert.deepEqual(options.filter((o) => o.unit === 'count').map((o) => o.value), [500, 100, 50, 10]);
   assert.equal(options.some((o) => o.unit === 'oz'), false);
   assert.equal(CPC.matchesMaxOrderSize(items[3].measures, { unit: 'count', value: 500 }), true);
   assert.equal(CPC.matchesMaxOrderSize(items[4].measures, { unit: 'count', value: 500 }), false);
@@ -260,4 +260,33 @@ test('max ounce size uses the whole order including multipacks', () => {
   assert.equal(CPC.matchesMaxOrderSize(items[3], { unit: 'oz', value: 80 }), true);
   const options = CPC.maxOrderSizeOptions(items.map((measures) => ({ measures })));
   assert.deepEqual(options.filter((o) => o.unit === 'oz').map((o) => o.value), [80, 16, 4]);
+});
+
+
+test('max size choices separate common singles and pairs from bulk outliers', () => {
+  const items = [...Array(24).fill(1), ...Array(20).fill(2), 4, 6, 8, 16, 40]
+    .map((countQuantity) => ({ measures: { countQuantity } }));
+  const options = CPC.maxOrderSizeOptions(items);
+  assert.deepEqual(options.map((o) => o.value), [4, 2, 1]);
+  assert.deepEqual(options.map((o) => o.matches), [45, 44, 24]);
+  assert.deepEqual(CPC.maxOrderSizeOptions(items.slice(0, 24)), []);
+});
+
+test('max size choices are bounded, distinct, and retain an arbitrary selection', () => {
+  const items = Array.from({ length: 100 }, (_, i) => ({ measures: { countQuantity: i + 1 } }));
+  const options = CPC.maxOrderSizeOptions(items);
+  assert.deepEqual(options.map((o) => o.value), [90, 75, 50, 25, 1]);
+  assert.equal(new Set(options.map((o) => o.matches)).size, options.length);
+  assert.ok(CPC.maxOrderSizeOptions(items, { unit: 'count', value: 7 }).some((o) => o.value === 7 && o.matches === 7));
+  assert.deepEqual(CPC.maxOrderSizeOptions([{ measures: { countQuantity: NaN } }, {},
+    { measures: { countQuantity: 0, ounceQuantity: Infinity } }]), []);
+  assert.deepEqual(CPC.maxOrderSizeOptions([], { unit: 'oz', value: 2.5 }),
+    [{ unit: 'oz', value: 2.5, matches: 0 }]);
+});
+
+test('fractional ounce choices round up and still include their observed sizes', () => {
+  const items = [1.234, 2.5, 8].map((ounceQuantity) => ({ measures: { ounceQuantity } }));
+  assert.deepEqual(CPC.maxOrderSizeOptions(items), [
+    { unit: 'oz', value: 2.5, matches: 2 }, { unit: 'oz', value: 1.24, matches: 1 },
+  ]);
 });

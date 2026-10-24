@@ -35,7 +35,8 @@ After code changes, click the extension's reload icon in `chrome://extensions` a
   three listings provide a reference ratio.
 - While this sort is active, the **Max order size** sidebar facet limits the results
   shown on the current page. It offers count or ounce cutoffs that separate the
-  sizes found on that page (for example, 50, 100, or 500 count). Ounces include
+  sizes found on that page, including small packs such as 1 or 2 count. It offers
+  up to five distinct limits per unit, favoring common sizes on varied pages. Ounces include
   the entire multipack; weight and fluid ounces use the same cutoffs. A chosen
   cutoff excludes listings whose size in that unit is unknown and stays selected
   across pages of the same search. **Any size** clears the limit.

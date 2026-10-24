@@ -1,6 +1,6 @@
 {
   "name": "amazon-cost-per-count",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "private": true,
   "description": "Chrome extension: sort Amazon search results by price per ounce / per count.",
   "scripts": {

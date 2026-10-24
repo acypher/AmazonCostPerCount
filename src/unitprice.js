@@ -291,19 +291,25 @@
     return { perOunce, perCount, ouncesPerCount, ounceQuantity, countQuantity, countBasis, other };
   }
 
-  // Offer only cutoffs that separate the known order sizes on this page. Keeping
-  // the active cutoff lets a selection survive pagination with a different range.
-  const SIZE_CUTOFFS = {
-    count: [500, 100, 50, 25, 10],
-    oz: [1280, 80, 16, 4, 1],
-  };
+  // Use observed sizes so small packs get useful limits too. On varied pages,
+  // keep the smallest size plus weighted quartiles and the 90th percentile:
+  // common sizes get attention without letting a few bulk outliers dominate.
+  // Omit the maximum (Any size covers it) and duplicate result sets.
   function maxOrderSizeOptions(items, selected = null) {
-    return Object.entries(SIZE_CUTOFFS).flatMap(([unit, cutoffs]) => {
+    return ['count', 'oz'].flatMap((unit) => {
       const sizes = items.map((it) => it.measures?.[unit === 'count' ? 'countQuantity' : 'ounceQuantity'])
-        .filter((size) => Number.isFinite(size) && size > 0);
-      return cutoffs.filter((value) =>
-        (sizes.some((size) => size <= value) && sizes.some((size) => size > value)) ||
-        (selected?.unit === unit && selected.value === value))
+        .filter((size) => Number.isFinite(size) && size > 0).sort((a, b) => a - b);
+      // Round up for readable ounce limits without excluding the observed size.
+      const readable = (size) => Math.ceil(size * 100) / 100;
+      const boundaries = [...new Set(sizes.map(readable))]
+        .filter((value) => sizes.some((size) => size > value));
+      const cutoffs = boundaries.length <= 5 ? boundaries :
+        [sizes[0], ...[0.25, 0.5, 0.75, 0.9].map((q) => sizes[Math.ceil(sizes.length * q) - 1])]
+          .map(readable).filter((value) => boundaries.includes(value));
+      if (selected?.unit === unit && Number.isFinite(selected.value) && selected.value > 0) {
+        cutoffs.push(selected.value); // retain the limit across pagination
+      }
+      return [...new Set(cutoffs)].sort((a, b) => b - a)
         .map((value) => ({ unit, value, matches: sizes.filter((size) => size <= value).length }));
     });
   }
