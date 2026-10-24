@@ -1,14 +1,14 @@
 /*
  * Content script for amazon.com search results (/s?k=...).
  * Adds "Price per oz/count" to the "Sort by:" pulldown and, when chosen,
- * reorders the result cards on the current page. The available counts on that
- * page determine whether count or ounce leads.
+ * groups comparable product forms and sorts by their meaningful unit on this page.
  */
 (() => {
   'use strict';
   if (location.pathname !== '/s' && !location.pathname.startsWith('/s/')) return;
 
   const CPC = globalThis.CPC;
+  const Compare = globalThis.CPCCompare;
   const OPTION_VALUE = 'cpc-unit-price-asc';
   const OPTION_LABEL = 'Price per oz/count';
   const STATE_KEY = 'cpcSortState';
@@ -30,7 +30,8 @@
   }
 
   let active = computeActive();
-  const selectedSize = () => readState()?.maxSize || null;
+  let view = null;
+  const mergeState = fields => writeState({ ...readState(), ...pageKey(), ...fields });
 
   // State lives only in sessionStorage (never in the URL: Amazon builds its other sort
   // links from the URL it served, so an extra parameter would leak into them).
@@ -39,28 +40,83 @@
     location.reload(); // like Amazon's own sort options; the reloaded page sorts itself
   }
 
-  // ---------------- max order size facet ----------------
+  // ---------------- comparison and max order size ----------------
+  const fallbackChoice = key => ({ key, label: key === 'count' ? 'Count — individual items' :
+    key === 'volume' ? 'Liquid — per fl oz' : 'Weight — per oz', unitLabel: key === 'count' ? 'count' : key === 'volume' ? 'fl oz' : 'oz', count: 0 });
   function sizeLabel(option) {
-    if (option.unit === 'count') return `${option.value} count`;
-    return option.value >= 80 && option.value % 16 === 0 ?
-      `${option.value / 16} lb` : `${option.value} oz`;
+    return `${option.value} ${option.unit === 'count' ? 'count' : option.unit === 'volume' ? 'fl oz' : 'oz'}`;
   }
-
-  function ensureSizeFacet(items, selected, preferred) {
+  function setSize(maxSize) {
+    const limits = { ...readState()?.limits, [view.key]: maxSize };
+    mergeState({ maxSize, limits });
+    apply();
+  }
+  function ensureComparison(choices) {
     const sidebar = document.querySelector('#s-refinements');
     if (!sidebar) return;
-    const options = CPC.maxOrderSizeOptions(items, selected);
+    let panel = document.getElementById('cpc-compare');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'cpc-compare';
+      panel.className = 'cpc-max-size';
+      panel.addEventListener('change', e => {
+        const input = e.target;
+        if (!(input instanceof HTMLInputElement) || input.name !== 'cpc-comparison') return;
+        const choice = choicesForPage.find(c => c.key === input.value);
+        if (!choice) return;
+        mergeState({ comparisonKey: choice.key, comparisonLabel: choice.label, comparisonUnitLabel: choice.unitLabel,
+          maxSize: readState()?.limits?.[choice.key] || null });
+        gaveUp = false;
+        reorderTimes.length = 0;
+        apply();
+      });
+      sidebar.prepend(panel);
+    }
+    const signature = JSON.stringify({ choices, key: view.key });
+    if (panel.dataset.signature === signature) return;
+    panel.dataset.signature = signature;
+    if (choices.length <= 1) {
+      const note = document.createElement('p');
+      note.id = 'cpc-comparison-note';
+      note.textContent = view.key ? `Comparing ${view.label.toLowerCase()}` : 'Comparison unavailable for these results';
+      panel.replaceChildren(note);
+      return;
+    }
+    const fieldset = document.createElement('fieldset');
+    const legend = document.createElement('legend');
+    legend.textContent = 'Compare';
+    fieldset.append(legend);
+    for (const choice of choices) {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'cpc-comparison';
+      input.value = choice.key;
+      input.checked = choice.key === view.key;
+      label.append(input, document.createTextNode(`${choice.label} (${choice.count})`));
+      fieldset.append(label);
+    }
+    panel.replaceChildren(fieldset);
+  }
+  function ensureSizeFacet(items, selected) {
+    const sidebar = document.querySelector('#s-refinements');
+    if (!sidebar) return;
+    const key = view.key;
+    const measureKey = key === 'count' ? 'countQuantity' : 'ounceQuantity';
+    const sizes = items.filter(it => it.comparison.key === key && it.comparison.unit)
+      .map(it => ({ measures: { [measureKey]: it.comparison.quantity } }));
+    const sizeUnit = key === 'count' ? 'count' : 'oz';
+    const options = key ? CPC.maxOrderSizeOptions(sizes, selected && { unit: sizeUnit, value: selected.value })
+      .filter(o => o.unit === sizeUnit).map(o => ({ ...o, unit: key })) : [];
     let facet = document.getElementById('cpc-max-size');
     if (!facet) {
       facet = document.createElement('div');
       facet.id = 'cpc-max-size';
       facet.className = 'cpc-max-size';
-      facet.addEventListener('change', (e) => {
+      facet.addEventListener('change', e => {
         const input = e.target;
         if (!(input instanceof HTMLInputElement) || input.name !== 'cpc-max-order-size') return;
-        const maxSize = input.value === 'any' ? null : { unit: input.dataset.unit, value: Number(input.value) };
-        writeState({ ...pageKey(), maxSize });
-        apply();
+        setSize(input.value === 'any' ? null : { unit: view.key, value: Number(input.value) });
       });
       const fieldset = document.createElement('fieldset');
       const legend = document.createElement('legend');
@@ -82,84 +138,75 @@
       input.placeholder = 'Enter limit';
       const unit = document.createElement('select');
       unit.setAttribute('aria-label', 'Custom maximum unit');
-      for (const value of ['count', 'oz']) {
-        const option = document.createElement('option');
-        option.value = option.textContent = value;
-        unit.appendChild(option);
-      }
       const button = document.createElement('button');
       button.type = 'submit';
       button.textContent = 'Apply';
       row.append(input, unit, button);
       form.append(label, row);
       form.addEventListener('input', () => input.setCustomValidity(''));
-      unit.addEventListener('change', () => {
-        input.step = unit.value === 'count' ? '1' : 'any';
-        input.setCustomValidity('');
-      });
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', e => {
         e.preventDefault();
         const value = input.valueAsNumber;
         const valid = Number.isFinite(value) && value > 0 &&
-          (unit.value !== 'count' || Number.isSafeInteger(value));
-        input.setCustomValidity(valid ? '' : unit.value === 'count' ?
+          (view.key !== 'count' || Number.isSafeInteger(value));
+        input.setCustomValidity(valid ? '' : view.key === 'count' ?
           'Enter a positive whole number for count.' : 'Enter a number greater than zero.');
         if (!form.reportValidity()) return;
-        writeState({ ...pageKey(), maxSize: { unit: unit.value, value } });
-        apply();
+        setSize({ unit: view.key, value });
       });
       const note = document.createElement('p');
       fieldset.append(legend, choices, form, note);
-      facet.appendChild(fieldset);
-      sidebar.prepend(facet);
+      facet.append(fieldset);
+      const compare = document.getElementById('cpc-compare');
+      if (compare) compare.after(facet); else sidebar.prepend(facet);
     }
-    const signature = JSON.stringify({ options, selected, preferred });
+    facet.hidden = !key;
+    const signature = JSON.stringify({ options, selected, key });
     if (facet.dataset.signature === signature) return;
     facet.dataset.signature = signature;
-    const choices = facet.querySelector('.cpc-size-options');
     const labels = [];
-    const addRadio = (labelText, value, unit, checked) => {
+    const addRadio = (text, value, checked) => {
       const label = document.createElement('label');
       const input = document.createElement('input');
       input.type = 'radio';
       input.name = 'cpc-max-order-size';
       input.value = value;
-      if (unit) input.dataset.unit = unit;
+      input.dataset.unit = key || '';
       input.checked = checked;
-      label.append(input, document.createTextNode(labelText));
+      label.append(input, document.createTextNode(text));
       labels.push(label);
     };
-    for (const option of options) {
-      addRadio(`Up to ${sizeLabel(option)} (${option.matches})`, String(option.value), option.unit,
-        selected?.unit === option.unit && selected.value === option.value);
-    }
-    addRadio('Any size', 'any', null, !selected);
-    choices.replaceChildren(...labels);
-    // Update controls only when the applied limit changes. Lazy-loaded results
-    // can refresh the choices without discarding a custom value being typed.
-    const selection = JSON.stringify(selected);
+    for (const option of options) addRadio(`Up to ${sizeLabel(option)} (${option.matches})`, String(option.value), selected?.value === option.value);
+    addRadio('Any size', 'any', !selected);
+    facet.querySelector('.cpc-size-options').replaceChildren(...labels);
+    const selection = JSON.stringify({ selected, key });
     if (facet.dataset.selection !== selection) {
       facet.dataset.selection = selection;
       const input = facet.querySelector('#cpc-custom-max-size');
       const unit = facet.querySelector('select');
-      unit.value = selected?.unit || preferred;
-      input.step = unit.value === 'count' ? '1' : 'any';
+      const option = document.createElement('option');
+      option.value = key || '';
+      option.textContent = key === 'count' ? 'count' : key === 'volume' ? 'fl oz' : 'oz';
+      unit.replaceChildren(option);
+      unit.value = key || '';
+      input.step = key === 'count' ? '1' : 'any';
       input.value = selected ? String(selected.value) : '';
       input.setCustomValidity('');
     }
-    const note = facet.querySelector('p');
-    note.textContent = `Filters this page’s 'per ${preferred === 'count' ? 'count' : 'oz'}' results`;
+    facet.querySelector('p').textContent = 'Applies to the selected comparison. Other product forms remain below.';
   }
 
   // ---------------- the Sort-by pulldown ----------------
+  const sortLabel = () => active && view?.key ? `Price per ${view.unitLabel}` : OPTION_LABEL;
   function ensureOption() {
+    const label = sortLabel();
     const sel = document.getElementById('s-result-sort-select');
     if (!sel) return;
     let opt = sel.querySelector(`option[value="${OPTION_VALUE}"]`);
     if (!opt) {
       opt = document.createElement('option');
       opt.value = OPTION_VALUE;
-      opt.textContent = OPTION_LABEL;
+      opt.textContent = label;
       sel.appendChild(opt);
       // Keyboard / native-select path.
       sel.addEventListener('change', (e) => {
@@ -167,11 +214,12 @@
         else writeState(null);
       }, true);
     }
+    if (opt.textContent !== label) opt.textContent = label;
     opt.dataset.url = location.pathname + location.search; // harmless fallback if Amazon navigates itself
     if (active) {
       for (const o of sel.options) o.selected = o === opt;
       const prompt = sel.closest('.a-dropdown-container')?.querySelector('.a-dropdown-prompt');
-      if (prompt && prompt.textContent !== OPTION_LABEL) prompt.textContent = OPTION_LABEL;
+      if (prompt && prompt.textContent !== label) prompt.textContent = label;
     }
   }
 
@@ -192,10 +240,11 @@
       ours.id = 's-result-sort-select_cpc';
       ours.dataset.cpc = '1';
       ours.setAttribute('data-value', JSON.stringify({ stringVal: OPTION_VALUE }));
-      ours.textContent = OPTION_LABEL;
+      ours.textContent = sortLabel();
       li.setAttribute('aria-labelledby', ours.id);
       ul.appendChild(li);
     }
+    if (ours.textContent !== sortLabel()) ours.textContent = sortLabel();
     if (active) for (const a of ul.querySelectorAll('a')) a.classList.toggle('a-active', a === ours);
     else ours.classList.remove('a-active');
   }
@@ -250,27 +299,16 @@
     return info;
   }
 
-  function badge(card, info, stats, referenceOzPerCount) {
+  function badge(card, info, stats) {
     let b = card.querySelector('.cpc-badge');
+    const unit = info.comparison.unit;
     const noPrice = !(info.price > 0);
-    const m = info.measures;
-    const usableCount = CPC.selectUnit(m, 'count', referenceOzPerCount)?.group === 'count' ? m.perCount : null;
-    const alternate = info.unit?.group === 'count' ? m?.perOunce : usableCount;
-    const describe = (unit) => {
-      const comparison = CPC.priceOutlier(unit, unit.group === 'count' ? stats.perCount :
-        unit.group === 'oz' ? stats.perOunce : null);
-      return { text: CPC.formatUnitPrice(unit) + (comparison ? ' *' : ''), comparison };
-    };
-    const lead = info.unit && describe(info.unit);
-    const second = alternate && describe(alternate);
-    const text = lead ? lead.text + (second ? ` | ${second.text}` : '') : noPrice ? 'no price shown' : 'no unit price';
-    const tip = info.unit ? [
-      `${CPC.formatUnitPrice(info.unit)}: ${info.unit.source}${lead.comparison ? `; ${lead.comparison}` : ''}`,
-      info.unit.corrected ? 'Amazon’s unit price disagreed with the title; this price was recomputed.' : null,
-      alternate ? `${CPC.formatUnitPrice(alternate)}: ${alternate.source}${second.comparison ? `; ${second.comparison}` : ''}` : null,
-      alternate?.corrected ? 'Amazon’s alternate unit price disagreed with the title; this price was recomputed.' : null,
-      m?.ouncesPerCount ? `${m.ouncesPerCount.toFixed(2)} oz/count` : null,
-    ].filter(Boolean).join('\n') : noPrice ? 'Amazon shows no price for this item on the results page' : 'Could not find a size or count for this item';
+    const outlier = unit && info.comparison.key === view.key ? CPC.priceOutlier(unit, stats) : null;
+    const text = unit ? CPC.formatUnitPrice(unit) + (outlier ? ' *' : '') : noPrice ? 'no price shown' : 'comparison unavailable';
+    const tip = unit ? `${CPC.formatUnitPrice(unit)}: ${unit.source}` +
+      (unit.corrected ? '\nAmazon’s unit price disagreed with the title; this price was recomputed.' : '') +
+      (outlier ? `\n${outlier}` : '') : noPrice ? 'Amazon shows no price for this item on the results page' :
+      'Could not confidently identify a comparable product type and quantity';
     if (b && b.textContent === text && b.title === tip) return;
     if (!b) {
       b = document.createElement('div');
@@ -280,8 +318,8 @@
     }
     b.textContent = text;
     b.title = tip;
-    b.classList.toggle('cpc-badge--corrected', !!(info.unit?.corrected || alternate?.corrected));
-    b.classList.toggle('cpc-badge--none', !info.unit);
+    b.classList.toggle('cpc-badge--corrected', !!unit?.corrected);
+    b.classList.toggle('cpc-badge--none', !unit);
   }
 
   // ---------------- sorting ----------------
@@ -303,37 +341,93 @@
     return true;
   }
 
-  function sortSlot(slot, preferred, referenceOzPerCount, stats, maxSize) {
+  function sortSlot(slot, ordered, stats, maxSize) {
     const cards = [...slot.children].filter(isAvailableResult);
-    if (!cards.length) return;
-    const items = cards.map((el) => {
-      const info = cardInfo(el);
-      return { el, ...info, unit: CPC.selectUnit(info.measures, preferred, referenceOzPerCount) };
-    });
+    const items = cards.map(el => ordered.find(it => it.el === el)).filter(Boolean);
     for (const it of items) {
-      // Empty lazy-load shells must stay visible long enough for Amazon to fill
-      // them; then the next mutation can decide whether their size matches.
-      it.el.classList.toggle('cpc-size-excluded', !it.pending && !CPC.matchesMaxOrderSize(it.measures, maxSize));
-      if (!it.pending) badge(it.el, it, stats, referenceOzPerCount);
+      it.el.classList.toggle('cpc-size-excluded', !matchesLimit(it, maxSize));
+      if (!it.pending) badge(it.el, it, stats);
     }
-    if (cards.length < 2) return;
-    const sorted = CPC.sortKeyed(items, preferred);
-    if (sorted.every((it, i) => it.el === cards[i])) return; // already in order
-    if (gaveUp) return;
-    const now = Date.now();
-    reorderTimes.push(now);
-    while (reorderTimes.length && now - reorderTimes[0] > 10000) reorderTimes.shift();
-    if (reorderTimes.length > 6) {
-      gaveUp = true;
-      console.warn('[cost-per-count] The page keeps changing the result order; pausing re-sorting until the next page load.');
-      return;
+    const sorted = ordered.filter(it => it.el.parentElement === slot);
+    const needsSort = sorted.some((it, i) => it.el !== cards[i]);
+    if (needsSort && !gaveUp) {
+      const now = Date.now();
+      reorderTimes.push(now);
+      while (reorderTimes.length && now - reorderTimes[0] > 10000) reorderTimes.shift();
+      if (reorderTimes.length > 6) {
+        gaveUp = true;
+        console.warn('[cost-per-count] The page keeps changing the order; pausing re-sorting until the next page load.');
+      } else {
+        const holders = cards.map(el => { const c = document.createComment('cpc'); el.before(c); return c; });
+        sorted.forEach((it, i) => holders[i].replaceWith(it.el));
+      }
     }
-    // Swap cards into the slots the cards occupied, leaving Amazon's widgets where they were.
-    const holders = cards.map((el) => { const c = document.createComment('cpc'); el.before(c); return c; });
-    sorted.forEach((it, i) => holders[i].replaceWith(it.el));
+    // Reconcile headings without rewriting unchanged nodes (avoids observer feedback).
+    const desired = [];
+    let lastGroup = null;
+    for (const it of [...slot.children].map(el => items.find(item => item.el === el)).filter(Boolean)) {
+      if (!matchesLimit(it, maxSize)) continue;
+      const key = it.comparison.unit ? it.comparison.key : 'unknown';
+      if (key === lastGroup) continue;
+      lastGroup = key;
+      const choice = choicesForPage.find(c => c.key === key) || fallbackChoice(key);
+      const text = key === 'unknown' ? 'Other results — comparison unavailable' : key === view.key ?
+        choice.label : `Other product forms — ${choice.label}`;
+      desired.push({ el: it.el, text });
+    }
+    const old = [...slot.querySelectorAll(':scope > .cpc-group-heading:not(.cpc-additional-heading)')];
+    desired.forEach(({ el, text }, i) => {
+      let heading = old[i];
+      if (!heading) {
+        heading = document.createElement('div');
+        heading.className = 'cpc-group-heading s-flex-full-width';
+        const h = document.createElement('h2');
+        heading.append(h);
+      }
+      if (heading.firstElementChild.textContent !== text) heading.firstElementChild.textContent = text;
+      if (el.previousElementSibling !== heading) el.before(heading);
+    });
+    old.slice(desired.length).forEach(el => el.remove());
   }
-
-  function banner(preferred, stats, maxSize, shown, total) {
+  function moveProductSections(slot) {
+    const cards = [...slot.children].filter(el => el.matches(CARD_SEL));
+    let heading = slot.querySelector(':scope > .cpc-additional-heading');
+    const rows = [...slot.children].filter(el => {
+      if (el.matches(CARD_SEL) || !el.matches('.s-widget, [data-nsp-retained]') ||
+          el.hasAttribute('data-nsp-hidden') || getComputedStyle(el).display === 'none') return false;
+      const identified = [...el.querySelectorAll('[data-asin]')].some(n => /^[a-z0-9]{10}$/i.test(n.dataset.asin || ''));
+      const linked = [...el.querySelectorAll('a[href]')].some(a => /\/(?:dp|gp\/product|sspa\/click)(?:\/|\?)/.test(a.getAttribute('href')));
+      return identified || linked;
+    });
+    if (!cards.length || !rows.length) { if (heading) heading.remove(); return; }
+    if (!heading) {
+      heading = document.createElement('div');
+      heading.className = 'cpc-additional-heading cpc-group-heading s-flex-full-width';
+      const h = document.createElement('h2');
+      h.textContent = 'Additional product sections';
+      heading.append(h);
+    }
+    let anchor = cards[cards.length - 1];
+    if (anchor.nextElementSibling !== heading) anchor.after(heading);
+    anchor = heading;
+    for (const row of rows) {
+      if (anchor.nextElementSibling !== row) anchor.after(row);
+      anchor = row;
+    }
+  }
+  let choicesForPage = [];
+  function matchesLimit(item, maxSize) {
+    if (!maxSize || item.comparison.key !== view.key || !item.comparison.unit || item.pending) return true;
+    return item.comparison.quantity > 0 && item.comparison.quantity <= maxSize.value;
+  }
+  function summarize(items) {
+    const values = items.filter(it => it.comparison.key === view.key && it.comparison.unit)
+      .map(it => it.comparison.unit.value).filter(n => Number.isFinite(n) && n > 0);
+    if (!values.length) return null;
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    return { count: values.length, mean, deviation: Math.sqrt(values.reduce((a, v) => a + (v - mean) ** 2, 0) / values.length) };
+  }
+  function banner(stats, maxSize, selectedCount, otherCount) {
     const slot = document.querySelector('.s-main-slot');
     if (!slot) return;
     let d = document.getElementById('cpc-banner');
@@ -343,12 +437,14 @@
       d.className = 'cpc-banner';
       slot.before(d);
     }
-    const filterText = maxSize ? ` Max order size: ${sizeLabel(maxSize)}; showing ${shown} of ${total} results on this page.` : '';
-    const message = `${CPC.bannerUnitSummary(preferred, stats, filterText)} ` +
-      '* marks a cost far less or far more than usual; hover for which. Amber means Amazon’s unit price disagreed with the title.';
+    const average = stats ? ` Mean price: ${CPC.formatUnitPrice({ value: stats.mean, unitLabel: view.unitLabel })} (${stats.count} products).` : '';
+    const limit = maxSize ? ` Max order size: ${sizeLabel(maxSize)}.` : '';
+    const message = view.key ? `${view.label}, lowest unit price first.${average}${limit} ` +
+      `${selectedCount} comparable products; ${otherCount} other results below. ` +
+      '* marks a price far less or far more than usual within this comparison; hover for details. Amber marks a corrected price.' :
+      'No reliable unit comparison found. Results remain visible below.';
     if (d.textContent !== message) d.textContent = message;
   }
-
   function apply() {
     if (applying) return;
     applying = true;
@@ -357,19 +453,44 @@
       ensurePopoverItem();
       if (active) {
         const slots = [...document.querySelectorAll('.s-main-slot')];
-        const items = slots.flatMap((slot) => [...slot.children].filter(isAvailableResult).map((el) => cardInfo(el)));
-        const maxSize = selectedSize();
-        const shownItems = items.filter((it) => it.pending || CPC.matchesMaxOrderSize(it.measures, maxSize));
-        const reference = CPC.ouncePerCountReference(shownItems);
-        const preferred = maxSize?.unit === 'count' ? 'count' : maxSize?.unit === 'oz' ? 'oz' : CPC.preferredUnit(shownItems, reference);
-        ensureSizeFacet(items, maxSize, preferred);
-        const stats = CPC.pageUnitStats(shownItems, reference);
-        slots.forEach((slot) => sortSlot(slot, preferred, reference, stats, maxSize));
-        banner(preferred, stats, maxSize, shownItems.length, items.length);
+        const items = slots.flatMap(slot => [...slot.children].filter(isAvailableResult).map(el => {
+          const info = cardInfo(el);
+          return { el, ...info, comparison: Compare.classify(info, qs().get('k') || '') };
+        }));
+        const choices = Compare.choices(items.map(it => it.comparison));
+        const state = readState() || {};
+        const key = ['count', 'volume', 'weight'].includes(state.comparisonKey) ? state.comparisonKey :
+          choices.slice().sort((a, b) => b.count - a.count)[0]?.key || null;
+        view = choices.find(c => c.key === key) || { ...fallbackChoice(key),
+          label: state.comparisonLabel || fallbackChoice(key).label,
+          unitLabel: state.comparisonUnitLabel || fallbackChoice(key).unitLabel };
+        if (!key) view.key = null;
+        if (key && !state.comparisonKey) mergeState({ comparisonKey: key, comparisonLabel: view.label,
+          comparisonUnitLabel: view.unitLabel, maxSize: state.maxSize?.unit === key ? state.maxSize : null });
+        choicesForPage = choices.slice();
+        if (key && !choices.some(c => c.key === key)) choicesForPage.push(view);
+        const maxSize = readState()?.maxSize?.unit === key ? readState().maxSize : null;
+        const shown = items.filter(it => matchesLimit(it, maxSize));
+        const stats = summarize(shown);
+        const selectedCount = shown.filter(it => it.comparison.key === key && it.comparison.unit).length;
+        const ranks = new Map([key, ...choicesForPage.map(c => c.key).filter(k => k !== key)].map((k, i) => [k, i]));
+        const ordered = items.map((it, index) => ({ ...it, index })).sort((a, b) => {
+          const ar = a.comparison.unit ? ranks.get(a.comparison.key) ?? 99 : 100;
+          const br = b.comparison.unit ? ranks.get(b.comparison.key) ?? 99 : 100;
+          return ar - br || (ar < 100 ? a.comparison.unit.value - b.comparison.unit.value : 0) || a.index - b.index;
+        });
+        ensureOption();
+        ensurePopoverItem();
+        ensureComparison(choicesForPage);
+        ensureSizeFacet(items, maxSize);
+        slots.forEach(slot => {
+          sortSlot(slot, ordered, stats, maxSize);
+          moveProductSections(slot);
+        });
+        banner(stats, maxSize, selectedCount, shown.length - selectedCount);
       } else {
-        // Amazon switches sorts without a full reload sometimes; drop our leftovers.
-        document.querySelectorAll('#cpc-banner, .cpc-badge, #cpc-max-size').forEach((el) => el.remove());
-        document.querySelectorAll('.cpc-size-excluded').forEach((el) => el.classList.remove('cpc-size-excluded'));
+        document.querySelectorAll('#cpc-banner, .cpc-badge, #cpc-max-size, #cpc-compare, .cpc-group-heading').forEach(el => el.remove());
+        document.querySelectorAll('.cpc-size-excluded').forEach(el => el.classList.remove('cpc-size-excluded'));
       }
     } catch (err) {
       console.warn('[cost-per-count]', err);

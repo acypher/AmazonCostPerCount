@@ -13,59 +13,44 @@ After code changes, click the extension's reload icon in `chrome://extensions` a
 
 ## What it does
 
-- Choosing the option reloads the page (like Amazon's own sort options) and then reorders
-  the results **on that page** cheapest-per-unit first. Amazon has no server-side unit-price
-  sort, so only the ~48–60 results currently loaded can be reordered.
-- Each card gets a badge with the unit price used and an alternate price when available.
-  Hover it to see the sources and ounces per count. The banner shows the mean cost
-  for the leading unit and includes the other unit only when at least three results
-  and at least 10% as many results as the leading unit have that price. A `*` beside
-  either price means it is far less or far more than usual for that unit; hover for the direction.
-  At least four comparable prices are needed, and a flagged price must be more than
-  one standard deviation from the mean and less than half or more than twice it.
-  An amber badge means Amazon's unit price disagreed with the title and was corrected.
-- The extension tries to calculate **per ounce**, **per count**, and **ounces per count**
-  for every listing. Missing information leaves the corresponding measure unavailable.
-  When at least 60% of listings with a usable ounce or count price have a count price,
-  **per count** leads; otherwise **per ounce** leads. Weight and fluid ounces are
-  grouped, as before. Other units and unknowns follow.
-- If a listing names an inner item count and an outer pack count, the two are
-  multiplied. A small package count with an unusually large ounces-per-count ratio
-  is treated as a package count rather than a comparable item count when at least
-  three listings provide a reference ratio.
-- While this sort is active, the **Max order size** sidebar facet limits the results
-  shown on the current page. It offers count or ounce cutoffs that separate the
-  sizes found on that page, including small packs such as 1 or 2 count. It offers
-  up to five distinct limits per unit, favoring common sizes on varied pages. Ounces include
-  the entire multipack; weight and fluid ounces use the same cutoffs. A chosen
-  cutoff excludes listings whose size in that unit is unknown and stays selected
-  across pages of the same search. Limits are shown smallest first within each
-  unit, followed by **Any size**, which clears the limit. Beneath the options,
-  enter a **Custom maximum**, choose count or oz, and click **Apply** (or press
-  Enter). Count limits must be positive whole numbers; ounces may be fractional.
-  Custom limits also stay selected across pages of the same search.
-- The choice sticks for the tab while you page through the same search. A new search, or picking
-  any of Amazon's own sort options, turns it off.
+Choose **Price per oz/count** to compare the products loaded on the current search
+page. All classification runs locally, with no agent, AI service, or network calls.
 
-## How unit prices are decided (`src/unitprice.js`)
+- Razor blades and refills compare by item count; bottled water compares by fluid
+  ounces. A bottle or box count is package information, not a second price comparison.
+- Mixed searches show **Compare** radio buttons above **Max order size**. Detergent
+  can offer pods/tablets per count, liquid/gel per fluid ounce, and powder per weight
+  ounce. Weight and fluid volume never share a ranking or average.
+- The selected comparison sorts first, lowest unit price first. Other forms appear
+  in separate labeled groups, followed by uncertain products. Product carousels stay
+  intact below the main results under **Additional product sections**, with Sponsored
+  labels preserved.
+- Each badge shows one meaningful unit price. The banner average and outlier marks
+  use only the selected group. Amber marks a price corrected from title quantities;
+  an asterisk marks an unusually high or low price within the selected comparison.
+- **Max order size** and **Custom maximum** offer only the selected unit. Limits
+  measure the whole order, including multipacks. Count limits must be whole numbers;
+  weight and volume can be fractional. Limits filter the selected comparison only;
+  other forms stay visible below. Each comparison remembers its own limit.
+- Your comparison and limits persist through pagination and lazy loading in the same
+  search. A new search or an Amazon sort clears the selection. Automatic defaults
+  stay fixed while more results load, so the page does not change units unexpectedly.
 
-Amazon's displayed unit price (e.g. `($0.19/ounce)`) is used when it checks out against the
-size and pack info in the title. Known Amazon mistakes that are corrected:
+## Classification and quantities
 
-| Amazon shows | Example | What the extension uses |
-|---|---|---|
-| `/count` equal to the full price (whole package counted as 1) | "Jif Creamy Peanut Butter, 16 Oz. Jar" — $2.98 ($2.98/count) | $2.98 ÷ 16 oz |
-| `/fl oz` for one can, ignoring the pack | "Bloom ... 7.5oz 12 Pack" — $17.98 ($2.40/fl oz) | $17.98 ÷ 90 fl oz |
-| `/count` of cans in a multipack with a known size | "Soda, 12 Fl Oz Cans (Pack of 24)" — ($0.50/count) | price ÷ 288 fl oz |
+`src/comparison.js` identifies product form from the actual title, quantity wording,
+and Amazon unit labels. Search terms supply context, without overriding contrary
+product evidence. Pods containing liquid remain count items; powder described as a
+“pods alternative” remains powder. Five blades in a cartridge describe its design,
+not the number of refills purchased. Empty containers, accessories, ambiguous roll
+sizes and unknown forms receive no invented comparison price.
 
-Deliberately **not** converted: capacities that aren't contents — e.g. "13 Gallon Trash Bags,
-120 Count" stays per count, "Brews 7.8 oz" coffee pods stay per count. A size is only multiplied by
-an explicit pack expression ("Pack of 12", "12-Pack", "6pk", "x8", "12 (16 Oz.) Jars", "Case of 6"),
-never by "servings".
+Prices use the whole purchased quantity. Explicit total quantities take precedence
+over per-container sizes. Multipacks are counted once; fluid ounces and weight
+ounces remain distinct. Existing unit parsing is in `src/unitprice.js`.
 
-The title's count or pack size is used to derive a per-count price even when Amazon
-shows a per-ounce price. An Amazon per-count value can still be used when the title
-does not give a count. Ounces per count is available when both prices can be derived.
+Only products loaded on the current page can be compared. Missing or ambiguous
+listing information may prevent classification; those products remain visible.
 
 ## Tests
 
@@ -79,7 +64,8 @@ Fixtures are real titles, prices and unit-price snippets captured from amazon.co
 
 - `manifest.json` — MV3 manifest; content scripts only, no permissions requested.
 - `src/unitprice.js` — pure parsing / unit-price / ordering logic (no DOM).
-- `src/content.js` — pulldown integration, card reading, reordering, badges.
+- `src/comparison.js` — local product-form classification and meaningful unit quantities.
+- `src/content.js` — comparison controls, pulldown integration, grouping, badges.
 - `src/content.css` — badge and banner styles.
 
 ## Publishing information

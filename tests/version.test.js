@@ -44,3 +44,15 @@ test('uncommitted extension code requires a version bump', (t) => {
       `Extension code changed without a version bump:\n${changed}`);
   }
 });
+
+
+test('all declared content scripts ship identically in browser and Safari', () => {
+  const manifest = JSON.parse(read('manifest.json'));
+  const safariManifest = JSON.parse(read(safari));
+  assert.deepEqual(manifest.content_scripts, safariManifest.content_scripts);
+  const resources = 'safari/Amazon Results CostPerCount/Amazon Results CostPerCount Extension/Resources/';
+  for (const script of manifest.content_scripts.flatMap(entry => [...entry.js, ...entry.css])) {
+    assert.equal(read(script), read(resources + script), script);
+  }
+  assert.ok(manifest.content_scripts[0].js.indexOf('src/comparison.js') < manifest.content_scripts[0].js.indexOf('src/content.js'));
+});

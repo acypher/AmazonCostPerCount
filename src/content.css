@@ -52,3 +52,17 @@
 }
 .cpc-custom-size-row button { cursor: pointer; background: #f0f2f2; }
 .cpc-custom-size-row button:hover { background: #e3e6e6; }
+
+/* Comparison headings span the grid without making Amazon widgets into products. */
+.cpc-group-heading {
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0 6px;
+  padding: 8px 0;
+  border-top: 1px solid #d5d9d9;
+}
+.cpc-group-heading h2 { margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; }
+#cpc-compare p { font-size: 14px; color: #0f1111; }
+#cpc-max-size[hidden] { display: none !important; }

@@ -1,11 +1,20 @@
 # Amazon Results Sort by CostPerCount
 
-Compare Amazon search results by what you actually get for the price. This extension adds **Price per oz/count** to the Sort by menu on Amazon.com search results.
+Compare Amazon search results by what you actually get for the price. Choose
+**Price per oz/count** from the Amazon.com Sort by menu.
 
-Choose that option to reorder the results currently loaded on the page by unit price. Each product gets a badge showing the unit price used. When Amazon's displayed unit price conflicts with the size or pack quantity in a product title, the extension recalculates it and marks the badge with an asterisk.
+The extension chooses meaningful units: blades or refills per count, bottled water
+per fluid ounce. Mixed searches offer comparison choices—for example dishwasher
+pods per count, liquid per fluid ounce, or powder per weight ounce. The selected
+product form sorts first; other forms and uncertain results remain below.
 
-Products priced per ounce appear first, followed by products priced per count, other units, and products without a usable unit price. The extension works on Amazon.com search results, including later pages of the same search. It cannot sort products that Amazon has not loaded into the current page.
+Unit-price badges, selected-group averages, and maximum-order-size controls use the
+appropriate comparison. Amber badges identify corrected prices; an asterisk marks
+an unusually high or low price within the selected comparison. Comparisons and
+separate size limits persist through pages of the same search.
 
-The extension runs only on Amazon.com search result pages. It does not collect, store, or transmit personal data, and it has no analytics or accounts.
+Classification runs entirely locally. No agent or AI service is needed. The
+extension has no analytics or accounts and transmits no browsing or product data.
+Only products loaded on the current search page can be compared.
 
 Independent extension; not affiliated with Amazon.
