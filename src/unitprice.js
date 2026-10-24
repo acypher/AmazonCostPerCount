@@ -309,7 +309,7 @@
       if (selected?.unit === unit && Number.isFinite(selected.value) && selected.value > 0) {
         cutoffs.push(selected.value); // retain the limit across pagination
       }
-      return [...new Set(cutoffs)].sort((a, b) => b - a)
+      return [...new Set(cutoffs)].sort((a, b) => a - b)
         .map((value) => ({ unit, value, matches: sizes.filter((size) => size <= value).length }));
     });
   }

@@ -39,7 +39,8 @@ After code changes, click the extension's reload icon in `chrome://extensions` a
   up to five distinct limits per unit, favoring common sizes on varied pages. Ounces include
   the entire multipack; weight and fluid ounces use the same cutoffs. A chosen
   cutoff excludes listings whose size in that unit is unknown and stays selected
-  across pages of the same search. **Any size** clears the limit.
+  across pages of the same search. Limits are shown smallest first within each
+  unit, followed by **Any size**, which clears the limit.
 - The choice sticks for the tab while you page through the same search. A new search, or picking
   any of Amazon's own sort options, turns it off.
 

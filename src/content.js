@@ -82,11 +82,11 @@
       label.append(input, document.createTextNode(labelText));
       fieldset.appendChild(label);
     };
-    addRadio('Any size', 'any', null, !selected);
     for (const option of options) {
       addRadio(`Up to ${sizeLabel(option)} (${option.matches})`, String(option.value), option.unit,
         selected?.unit === option.unit && selected.value === option.value);
     }
+    addRadio('Any size', 'any', null, !selected);
     const note = document.createElement('p');
     note.textContent = `Filters this page’s 'per ${preferred === 'count' ? 'count' : 'oz'}' results`;
     fieldset.appendChild(note);
