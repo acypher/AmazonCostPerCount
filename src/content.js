@@ -291,8 +291,20 @@
   const reorderTimes = [];
   let gaveUp = false;
 
+  // Keep our own size-filtered cards in the source set so limits can be relaxed.
+  // Exclude rows hidden by No Sponsored or another page/extension rule.
+  function isAvailableResult(card) {
+    if (!card.matches(CARD_SEL)) return false;
+    if (document.getElementById('nsp-style') && card.closest('.AdHolder, [data-nsp-hidden]')) return false;
+    for (let node = card; node; node = node.parentElement) {
+      if (node.hidden) return false;
+      if (!node.classList.contains('cpc-size-excluded') && getComputedStyle(node).display === 'none') return false;
+    }
+    return true;
+  }
+
   function sortSlot(slot, preferred, referenceOzPerCount, stats, maxSize) {
-    const cards = [...slot.children].filter((el) => el.matches(CARD_SEL));
+    const cards = [...slot.children].filter(isAvailableResult);
     if (!cards.length) return;
     const items = cards.map((el) => {
       const info = cardInfo(el);
@@ -345,7 +357,7 @@
       ensurePopoverItem();
       if (active) {
         const slots = [...document.querySelectorAll('.s-main-slot')];
-        const items = slots.flatMap((slot) => [...slot.children].filter((el) => el.matches(CARD_SEL)).map((el) => cardInfo(el)));
+        const items = slots.flatMap((slot) => [...slot.children].filter(isAvailableResult).map((el) => cardInfo(el)));
         const maxSize = selectedSize();
         const shownItems = items.filter((it) => it.pending || CPC.matchesMaxOrderSize(it.measures, maxSize));
         const reference = CPC.ouncePerCountReference(shownItems);
