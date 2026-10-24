@@ -290,3 +290,21 @@ test('fractional ounce choices round up and still include their observed sizes',
     { unit: 'oz', value: 1.24, matches: 1 }, { unit: 'oz', value: 2.5, matches: 2 },
   ]);
 });
+
+
+test('razor refill counts avoid fractional limits from rounded Amazon prices', () => {
+  for (const title of ["Gillette Mach3 Men's Razor Blades, 15 Blade Refills",
+    'Mach3 Razor Refills for Men, 15 Razor Blade Refills',
+    '5-Blade Razor with 15 Cartridges']) {
+    const result = measures(title, 37.97, '($2.53/count)');
+    assert.equal(result.countQuantity, 15);
+    assert.equal(result.countBasis, 'title-items');
+    close(result.perCount.value, 37.97 / 15);
+    assert.ok(CPC.matchesMaxOrderSize(result, { unit: 'count', value: 15 }));
+  }
+  assert.equal(CPC._findCount('5-Blade Razor'), null);
+  const inferred = measures('Razor refills', 37.97, '($2.53/count)');
+  assert.equal(inferred.countQuantity, 15);
+  const items = [inferred, measures('100 Count Blades', 10, null)].map(measures => ({ measures }));
+  assert.deepEqual(CPC.maxOrderSizeOptions(items).map(o => o.value), [15]);
+});

@@ -115,7 +115,7 @@
 
   /** Item counts: "120 Count", "80ct", "30 pods", "100 K-Cups". */
   function findCount(title) {
-    const re = /(?<![\w.])(\d{1,3}(?:,\d{3})+|\d+)\s*-?\s*(?:count|ct|cnt|pcs?|pieces?|pods?|k-?cups?|capsules?|caps|tablets?|tabs|softgels?|gummies|sheets?|rolls?|wipes|bags|packets|sachets)(?![a-z])/gi;
+    const re = /(?<![\w.])(\d{1,3}(?:,\d{3})+|\d+)\s*-?\s*(?:count|ct|cnt|pcs?|pieces?|pods?|k-?cups?|capsules?|caps|tablets?|tabs|softgels?|gummies|sheets?|rolls?|wipes|bags|packets|sachets|(?:razor\s+)?(?:blade\s+)?refills?|cartridges?)(?![a-z])/gi;
     let m; const out = [];
     while ((m = re.exec(String(title || '')))) { const n = parseNum(m[1]); if (n > 0) out.push(n); }
     // "2 packs of 20" describes 20 items in each pack, even without "20 count".
@@ -263,7 +263,8 @@
       countQuantity = mult;
       countBasis = 'title-pack';
     } else if (amazonCount > 1 && Number.isFinite(amazonCount)) {
-      countQuantity = amazonCount;
+      // Amazon rounds its displayed unit price; discrete items need whole counts.
+      countQuantity = Math.round(amazonCount);
       countBasis = 'amazon';
     }
 
