@@ -14,9 +14,8 @@ an unusually high or low price within the selected comparison. Comparisons and
 separate size limits persist through pages of the same search.
 
 Classification runs entirely locally. No agent or AI service is needed. The
-extension has no analytics or accounts. Ambiguous package quantities may be
-checked against the matching public Amazon product photo. Image recognition and
-its language data are bundled locally; nothing is sent to an AI service.
+extension has no analytics or accounts. Quantities and outliers are checked using
+listing text and unit prices, without image recognition or image downloads.
 Only products loaded on the current search page can be compared.
 
 Independent extension; not affiliated with Amazon.

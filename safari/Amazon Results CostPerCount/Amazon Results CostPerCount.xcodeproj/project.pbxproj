@@ -20,7 +20,6 @@
 		9B36DB34307096DF00B21FE1 /* icons in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB31307096DF00B21FE1 /* icons */; };
 		9B36DB35307096DF00B21FE1 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB32307096DF00B21FE1 /* manifest.json */; };
 		9B36DB36307096DF00B21FE1 /* src in Resources */ = {isa = PBXBuildFile; fileRef = 9B36DB33307096DF00B21FE1 /* src */; };
-		A0130C000000000000000002 /* ocr in Resources */ = {isa = PBXBuildFile; fileRef = A0130C000000000000000001 /* ocr */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,7 +63,6 @@
 		9B36DB31307096DF00B21FE1 /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = Resources/icons; sourceTree = "<group>"; };
 		9B36DB32307096DF00B21FE1 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = Resources/manifest.json; sourceTree = "<group>"; };
 		9B36DB33307096DF00B21FE1 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = Resources/src; sourceTree = "<group>"; };
-		A0130C000000000000000001 /* ocr */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ocr; path = Resources/ocr; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,7 +141,6 @@
 				9B36DB31307096DF00B21FE1 /* icons */,
 				9B36DB32307096DF00B21FE1 /* manifest.json */,
 				9B36DB33307096DF00B21FE1 /* src */,
-				A0130C000000000000000001 /* ocr */,
 			);
 			name = Resources;
 			path = "Amazon Results CostPerCount Extension";
@@ -249,7 +246,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				9B36DB36307096DF00B21FE1 /* src in Resources */,
-				A0130C000000000000000002 /* ocr in Resources */,
 				9B36DB35307096DF00B21FE1 /* manifest.json in Resources */,
 				9B36DB34307096DF00B21FE1 /* icons in Resources */,
 			);
@@ -441,7 +437,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.13;
+				MARKETING_VERSION = 1.0.14;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -475,7 +471,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.13;
+				MARKETING_VERSION = 1.0.14;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -513,7 +509,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.13;
+				MARKETING_VERSION = 1.0.14;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -554,7 +550,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.13;
+				MARKETING_VERSION = 1.0.14;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,

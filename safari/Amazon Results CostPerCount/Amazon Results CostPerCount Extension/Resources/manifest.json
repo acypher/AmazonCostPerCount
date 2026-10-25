@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Results Sort by CostPerCount",
   "short_name": "CostPerCount",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Sorts Amazon search results by price per ounce or count and flags misleading unit prices.",
   "browser_specific_settings": {
     "gecko": {
@@ -28,8 +28,6 @@
       "js": [
         "src/unitprice.js",
         "src/comparison.js",
-        "src/photo.js",
-        "src/photo-client.js",
         "src/content.js"
       ],
       "css": [
@@ -37,22 +35,5 @@
       ],
       "run_at": "document_idle"
     }
-  ],
-  "host_permissions": [
-    "https://m.media-amazon.com/*",
-    "https://images-na.ssl-images-amazon.com/*"
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "ocr/host.html"
-      ],
-      "matches": [
-        "https://www.amazon.com/*"
-      ]
-    }
-  ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self'; connect-src 'self' https://m.media-amazon.com https://images-na.ssl-images-amazon.com"
-  }
+  ]
 }

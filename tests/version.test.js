@@ -59,21 +59,17 @@ test('all declared content scripts ship identically in browser and Safari', () =
   assert.ok(manifest.content_scripts[0].js.indexOf('src/comparison.js') < manifest.content_scripts[0].js.indexOf('src/content.js'));
 });
 
-test('local OCR code, model, permissions and assets ship identically for Safari', () => {
+test('browser and Safari ship without OCR assets or image permissions', () => {
   const manifest = JSON.parse(read('manifest.json'));
-  const safariManifest = JSON.parse(read(safari));
-  assert.deepEqual(manifest, safariManifest);
-  const resources = path.join(root, path.dirname(safari));
-  for (const file of fs.readdirSync(path.join(root, 'ocr'), { recursive: true })) {
-    if (path.basename(file).startsWith('.')) continue;
-    const source = path.join(root, 'ocr', file);
-    if (!fs.statSync(source).isFile()) continue;
-    assert.ok(fs.readFileSync(source).equals(fs.readFileSync(path.join(resources, 'ocr', file))), file);
+  assert.deepEqual(manifest, JSON.parse(read(safari)));
+  assert.equal(manifest.host_permissions, undefined);
+  assert.equal(manifest.web_accessible_resources, undefined);
+  assert.equal(manifest.content_security_policy, undefined);
+  for (const base of ['', path.dirname(safari)]) {
+    assert.equal(fs.existsSync(path.join(root, base, 'ocr')), false);
+    assert.equal(fs.existsSync(path.join(root, base, 'src/photo.js')), false);
+    assert.equal(fs.existsSync(path.join(root, base, 'src/photo-client.js')), false);
   }
-  assert.deepEqual(manifest.host_permissions, ['https://m.media-amazon.com/*', 'https://images-na.ssl-images-amazon.com/*']);
-  assert.match(manifest.content_security_policy.extension_pages, /wasm-unsafe-eval/);
-  assert.doesNotMatch(manifest.content_security_policy.extension_pages, /'unsafe-eval'/);
-  assert.equal(manifest.web_accessible_resources[0].resources[0], 'ocr/host.html');
-  assert.match(read(project), /ocr in Resources/);
-  assert.match(read(project), /path = Resources\/ocr/);
+  assert.doesNotMatch(read(project), /Resources\/ocr|ocr in Resources/);
+  assert.doesNotMatch(read('package-lock.json'), /tesseract/);
 });
